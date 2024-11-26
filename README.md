@@ -3,7 +3,7 @@
 ![MauiGnome](https://github.com/fpedrolucas95/MauiGnome/blob/master/images/mauignome.png)
 
 **MauiGnome** é uma biblioteca MDI (Multiple Document Interface) desenvolvida para **.NET MAUI** e inspirada na interface GNOME. Ela permite gerenciar várias janelas em um único aplicativo, oferecendo funcionalidades como redimensionamento, movimentação e organização multitarefa. 
-Sendo totalmente multiplataforma, **MauiGnome** funciona em desktops e dispositivos móveis, com testes realizados no Android e outras plataformas suportadas pelo .NET MAUI.
+Sendo totalmente multiplataforma, **MauiGnome** funciona em desktops e dispositivos móveis.
 
 ## 🚀 Funcionalidade
 
