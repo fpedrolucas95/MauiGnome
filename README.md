@@ -58,4 +58,4 @@ Este repositório inclui uma aplicação de exemplo que demonstra o uso da bibli
 
 ## 📜 Licença
 
-Este projeto está sob a licença AGPL-3.0. Esta licença garante que você pode usar, modificar e distribuir o código, desde que mantenha o código fonte aberto e disponível. Para mais detalhes, consulte o arquivo [LICENSE.txt](https://github.com/fpedrolucas95/MauiGnome/blob/main/LICENSE.txt).
+Este projeto está sob a licença AGPL-3.0. Esta licença garante que você pode usar, modificar e distribuir o código, desde que mantenha o código fonte aberto e disponível. Para mais detalhes, consulte o arquivo [LICENSE.txt](https://github.com/fpedrolucas95/MauiGnome/blob/master/LICENSE.txt).
