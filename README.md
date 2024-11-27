@@ -4,59 +4,80 @@
 ![MauiGnome](https://github.com/fpedrolucas95/MauiGnome/blob/master/images/mauignome_mobile.png)
 
 **MauiGnome** é uma biblioteca MDI (Multiple Document Interface) desenvolvida para **.NET MAUI** e inspirada na interface GNOME. Ela permite gerenciar várias janelas em um único aplicativo, oferecendo funcionalidades como redimensionamento, movimentação e organização multitarefa. 
+
 Sendo totalmente multiplataforma, **MauiGnome** funciona em desktops e dispositivos móveis.
 
-## 🚀 Funcionalidade
-
-- Gerencie várias janelas dentro de um único container.
-- Suporte a janelas redimensionáveis e móveis.
-- Personalize facilmente o conteúdo e estilo das janelas.
+## 🚀 Funcionalidades
+- Gerenciamento de múltiplas janelas em um container
+- Janelas redimensionáveis e móveis
+- Interface personalizável
+- Suporte a temas claro/escuro
 
 ## 🛠️ Como Implementar
 
-1. **Adicione os arquivos ao seu projeto MAUI**:
-   * Crie uma pasta `Controls` no seu projeto
-   * Adicione os arquivos `MDIContainer.cs` e `MDIWindow.cs` à pasta
-
-2. **Configure o `MDIContainer` no layout principal**:
-   No arquivo XAML, inclua o container que gerenciará as janelas:
-
+1. **Adicione os arquivos base**:
+   * Clone os arquivos `MDIContainer.cs` e `MDIWindow.cs` para uma pasta `Controls` no seu projeto
+   * Adicione a referência no XAML:
 ```xaml
-<controls:MDIContainer x:Name="MDIContainer" 
+xmlns:controls="clr-namespace:YourNamespace.Controls"
+```
+
+2. **Adicione o Container MDI**:
+```xaml
+<controls:MDIContainer 
     Windows="{Binding Windows}"
     ActiveWindow="{Binding ActiveWindow, Mode=TwoWay}" 
     HorizontalOptions="Fill" 
-    VerticalOptions="Fill"
-    Background="Transparent"/>
+    VerticalOptions="Fill"/>
 ```
 
-3. **Adicione janelas dinamicamente**:
-   No código, crie instâncias de MDIWindow e adicione-as ao container. A propriedade `WindowContent` aceita qualquer ContentView, permitindo que você carregue seus próprios arquivos XAML como conteúdo da janela:
-
+3. **Crie suas janelas**:
 ```csharp
+// Crie uma nova janela
 var window = new MDIWindow
 {
-    Title = "Nova Janela",
-    Icon = "icon.png",
-    WindowContent = new MinhaView() // Seu próprio ContentView/Page XAML
+    Title = "Minha Janela",
+    WindowContent = new MinhaView(),
+    WindowWidth = 400,
+    WindowHeight = 300
 };
-mdiContainer.Windows.Add(window);
+
+// Adicione ao container
+Windows.Add(window);
 ```
 
-4. **Defina a janela ativa (opcional)**:
-   Para ativar uma janela específica:
-
+4. **Gerencie suas janelas**:
 ```csharp
-mdiContainer.SetActiveWindow(window);
+// Ative uma janela
+window.Activate();
+
+// Feche uma janela
+window.Close();
 ```
 
-## 🧪 Exemplo de Aplicação
+## 📦 Recursos Incluídos
 
-Este repositório inclui uma aplicação de exemplo que demonstra o uso da biblioteca:
-- Uma calculadora funcional que pode ser aberta em múltiplas janelas
-- O icônico papel de parede do Windows XP como fundo
-- Perfeito para entender a implementação e funcionalidades do MauiGnome
+1. **Gerenciamento de Janelas**:
+   - Movimentação
+   - Redimensionamento
+
+2. **Personalização**:
+   - Temas claro/escuro
+   - Ícones personalizados
+   - Estilos customizáveis
+
+3. **Eventos**:
+   - Ativação/Desativação
+   - Abertura/Fechamento
+   - Alteração de estado
+
+## 🧪 Exemplo Prático
+
+Este repositório inclui uma aplicação de exemplo demonstrando:
+- Calculadora funcional com múltiplas instâncias
+- Interface inspirada no GNOME
+- Implementação completa dos recursos
 
 ## 📜 Licença
 
-Este projeto está sob a licença AGPL-3.0. Esta licença garante que você pode usar, modificar e distribuir o código, desde que mantenha o código fonte aberto e disponível. Para mais detalhes, consulte o arquivo [LICENSE.txt](https://github.com/fpedrolucas95/MauiGnome/blob/master/LICENSE.txt).
+Este projeto está sob a licença AGPL-3.0. Consulte o arquivo [LICENSE.txt](https://github.com/fpedrolucas95/MauiGnome/blob/master/LICENSE.txt) para mais detalhes.
