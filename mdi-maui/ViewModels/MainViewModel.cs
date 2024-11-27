@@ -12,9 +12,12 @@ public partial class MainViewModel : ObservableObject
 {
     #region Fields
     private readonly IDispatcherTimer _timer;
+    private readonly MDIContainer _container;
+    #endregion
 
+    #region Properties
     [ObservableProperty]
-    private ObservableCollection<MDIWindow> windows;
+    private ObservableCollection<MDIWindow> windows = new();
 
     [ObservableProperty]
     private MDIWindow? activeWindow;
@@ -25,103 +28,93 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string currentDate = DateTime.Now.ToString("d 'de' MMMM 'de' yyyy", CultureInfo.CurrentCulture);
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsCloseVisible))]
-    [NotifyPropertyChangedFor(nameof(WindowOpen))]
-    private int windowCounter;
-    #endregion
+    public bool IsCloseVisible => Windows.Count > 0;
 
-    #region Properties
-    public bool IsCloseVisible => WindowCounter > 0;
-    public string WindowOpen => WindowCounter.ToString();
+    public string WindowOpen => Windows.Count.ToString();
     #endregion
 
     #region Commands
     public IRelayCommand OpenCalculatorCommand { get; }
+    public IRelayCommand OpenAboutCommand { get; }
     public IRelayCommand CascadeCommand { get; }
     public IRelayCommand CloseAllWindowsCommand { get; }
+    public IRelayCommand SwitchThemeCommand { get; }
     #endregion
 
     #region Constructor
-    public MainViewModel()
+    public MainViewModel(MDIContainer container)
     {
-        Windows = [];
-        Windows.CollectionChanged += Windows_CollectionChanged;
+        _container = container;
+        Windows.CollectionChanged += OnWindowsCollectionChanged;
 
         OpenCalculatorCommand = new RelayCommand(OpenCalculatorWindow);
+        OpenAboutCommand = new RelayCommand(OpenAboutWindow);
         CascadeCommand = new RelayCommand(CascadeWindows);
         CloseAllWindowsCommand = new RelayCommand(CloseAllWindows);
+        SwitchThemeCommand = new RelayCommand(ToggleTheme);
 
-        _timer = Application.Current?.Dispatcher?.CreateTimer() ?? throw new InvalidOperationException("Application.Current or Dispatcher is null");
+        _timer = Application.Current?.Dispatcher?.CreateTimer() ?? throw new InvalidOperationException("Dispatcher not available");
         _timer.Interval = TimeSpan.FromSeconds(1);
-        _timer.Tick += (s, e) => UpdateTime();
+        _timer.Tick += (s, e) => UpdateDateTime();
         _timer.Start();
+
+        ObserveThemeChanges();
     }
     #endregion
 
     #region Private Methods
-    private void Windows_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnWindowsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        WindowCounter = Windows.Count;
+        ActiveWindow = e.Action == NotifyCollectionChangedAction.Remove && e.OldItems != null ? Windows.LastOrDefault() : ActiveWindow;
 
-        if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems != null)
-        {
-            foreach (MDIWindow window in e.OldItems)
-            {
-                if (ActiveWindow == window)
-                {
-                    ActiveWindow = Windows.LastOrDefault();
-                }
-            }
-        }
-    }
-
-    private void MdiWindow_Closed(object? sender, EventArgs e)
-    {
-        if (sender is MDIWindow window)
-        {
-            Windows.Remove(window);
-        }
+        OnPropertyChanged(nameof(WindowOpen));
+        OnPropertyChanged(nameof(IsCloseVisible));
     }
 
     private void OpenCalculatorWindow()
     {
         var calcView = new CalcView();
-
-        var mdiWindow = new MDIWindow
-        {
-            X = WindowCounter * 20,
-            Y = WindowCounter * 20,
-            WindowWidth = 320,
-            WindowHeight = 480,
-            Icon = "calculator.png",
-            Title = "Calculadora",
-            WindowContent = calcView,
-            BackgroundColor = Colors.Transparent
-        };
-
-        mdiWindow.BindingContext = calcView.BindingContext;
-
-        if (calcView.BindingContext is ICloseWindow vm)
-        {
-            vm.CloseThisWindowCommand = new RelayCommand(() => mdiWindow.Close());
-        }
-
-        mdiWindow.Closed += MdiWindow_Closed;
+        var mdiWindow = CreateMDIWindow("Calculadora", calcView, 320, 480, GetIcon("calculator"));
+        mdiWindow.Closed += (_, _) => Windows.Remove(mdiWindow);
         Windows.Add(mdiWindow);
         ActiveWindow = mdiWindow;
+    }
+
+    private void OpenAboutWindow()
+    {
+        var aboutView = new AboutView();
+        var mdiWindow = CreateMDIWindow("Sobre", aboutView, 280, 300, GetIcon("about"), false);
+
+        aboutView.BindingContext = new AboutViewModel(mdiWindow);
+
+        mdiWindow.Closed += (_, _) => Windows.Remove(mdiWindow);
+        Windows.Add(mdiWindow);
+        ActiveWindow = mdiWindow;
+    }
+
+    private MDIWindow CreateMDIWindow(string title, View content, double width = 400, double height = 300, string icon = "", bool resize = true)
+    {
+        return new MDIWindow
+        {
+            ParentContainer = _container,
+            WindowWidth = width,
+            WindowHeight = height,
+            Title = title,
+            WindowContent = content,
+            Icon = icon,
+            Resize = resize,
+            BackgroundColor = Colors.Transparent,
+            BindingContext = content.BindingContext
+        };
     }
 
     private void CascadeWindows()
     {
         const int offset = 20;
-        int index = 0;
-
-        foreach (var window in Windows)
+        for (int i = 0; i < Windows.Count; i++)
         {
-            window.X = index * offset;
-            window.Y = index * offset;
-            index++;
+            Windows[i].X = i * offset;
+            Windows[i].Y = i * offset;
         }
     }
 
@@ -131,21 +124,50 @@ public partial class MainViewModel : ObservableObject
         {
             window.Close();
         }
-
         Windows.Clear();
-        WindowCounter = 0;
-        ActiveWindow = null;
+        OnPropertyChanged(nameof(IsCloseVisible));
+        OnPropertyChanged(nameof(WindowOpen));
     }
 
-    private void UpdateTime()
+    private void UpdateDateTime()
     {
         CurrentTime = DateTime.Now.ToString("HH:mm");
         CurrentDate = DateTime.Now.ToString("d 'de' MMMM 'de' yyyy", CultureInfo.CurrentCulture);
     }
-    #endregion
-}
 
-public interface ICloseWindow
-{
-    IRelayCommand CloseThisWindowCommand { get; set; }
+    private static string GetIcon(string windowType)
+    {
+        return Application.Current?.RequestedTheme == AppTheme.Dark
+            ? $"dark_{windowType}.png"
+            : $"light_{windowType}.png";
+    }
+
+    private void UpdateWindowIcons()
+    {
+        foreach (var window in Windows)
+        {
+            window.Icon = GetIcon(window.Title.ToLower() switch
+            {
+                "calculadora" => "calculator",
+                "sobre" => "about",
+                _ => "default"
+            });
+        }
+    }
+
+    private void ToggleTheme()
+    {
+        if (Application.Current == null) return;
+
+        Application.Current.UserAppTheme = Application.Current.UserAppTheme == AppTheme.Dark ? AppTheme.Light : AppTheme.Dark;
+    }
+
+    private void ObserveThemeChanges()
+    {
+        Application.Current?.Dispatcher?.Dispatch(() =>
+        {
+            Application.Current.RequestedThemeChanged += (_, _) => UpdateWindowIcons();
+        });
+    }
+    #endregion
 }

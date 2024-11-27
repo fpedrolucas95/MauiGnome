@@ -59,6 +59,10 @@
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.1" />
 		<PackageReference Include="CommunityToolkit.Maui.Core" Version="9.1.1" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+		<PackageReference Include="GitInfo" Version="3.5.0">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
@@ -77,18 +81,27 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Remove="Resources\Images\icons\calculator.svg" />
-	  <None Remove="Resources\Images\icons\close.svg" />
-	  <None Remove="Resources\Images\icons\settings.svg" />
+	  <None Remove="Resources\Images\icons\dark_github.svg" />
+	  <None Remove="Resources\Images\icons\light_github.svg" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <MauiImage Include="Resources\Images\icons\calculator.svg" />
-	  <MauiImage Include="Resources\Images\icons\close.svg" />
-	  <MauiImage Include="Resources\Images\icons\settings.svg" />
+	  <MauiImage Include="Resources\Images\icons\dark_about.svg" BaseSize="150,150" />
+	  <MauiImage Include="Resources\Images\icons\dark_calculator.svg" BaseSize="150,150" />
+	  <MauiImage Include="Resources\Images\icons\dark_close.svg" BaseSize="150,150" />
+	  <MauiImage Include="Resources\Images\icons\dark_github.svg" BaseSize="150,150" />
+	  <MauiImage Include="Resources\Images\icons\dark_settings.svg" BaseSize="150,150" />
+	  <MauiImage Include="Resources\Images\icons\light_about.svg" BaseSize="150,150" />
+	  <MauiImage Include="Resources\Images\icons\light_calculator.svg" BaseSize="150,150" />
+	  <MauiImage Include="Resources\Images\icons\light_close.svg" BaseSize="150,150" />
+	  <MauiImage Include="Resources\Images\icons\light_github.svg" BaseSize="150,150" />
+	  <MauiImage Include="Resources\Images\icons\light_settings.svg" BaseSize="150,150" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <MauiXaml Update="Views\AboutView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Views\CalcView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
