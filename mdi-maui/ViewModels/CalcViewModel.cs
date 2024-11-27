@@ -8,25 +8,47 @@ namespace mdi_maui.ViewModels;
 
 public partial class CalcViewModel : ObservableObject
 {
+    #region Consts
     private const int MAX_DISPLAY_LENGTH = 16;
     private const int DECIMAL_PLACES = 4;
     private const string ERROR_MESSAGE = "Erro";
     private const string INFINITY_MESSAGE = "∞";
+    #endregion
 
+    #region Fields
     private string display = "0";
     private bool isNewNumber = true;
     private string expression = string.Empty;
     private string lastOperator = string.Empty;
     private string lastNumber = string.Empty;
     private bool hasError = false;
+    #endregion
 
+    #region Properties
+    public string Display
+    {
+        get => display;
+        set
+        {
+            var formattedValue = CalcViewModel.FormatDisplayValue(value);
+            SetProperty(ref display, formattedValue);
+            ((RelayCommand)CalculateCommand).NotifyCanExecuteChanged();
+            ((RelayCommand)DecimalCommand).NotifyCanExecuteChanged();
+            ((RelayCommand)PercentCommand).NotifyCanExecuteChanged();
+        }
+    }
+    #endregion
+
+    #region Commands
     public ICommand NumberCommand { get; }
     public ICommand OperatorCommand { get; }
     public ICommand CalculateCommand { get; }
     public ICommand ClearCommand { get; }
     public ICommand DecimalCommand { get; }
     public ICommand PercentCommand { get; }
+    #endregion
 
+    #region Constructor
     public CalcViewModel()
     {
         NumberCommand = new RelayCommand<string>(OnNumberPressed);
@@ -36,24 +58,9 @@ public partial class CalcViewModel : ObservableObject
         DecimalCommand = new RelayCommand(OnDecimalPressed, CanUseDecimal);
         PercentCommand = new RelayCommand(OnPercentPressed, CanUsePercent);
     }
+    #endregion
 
-    public string Display
-    {
-        get => display;
-        set
-        {
-            var formattedValue = FormatDisplayValue(value);
-            SetProperty(ref display, formattedValue);
-            ((RelayCommand)CalculateCommand).NotifyCanExecuteChanged();
-            ((RelayCommand)DecimalCommand).NotifyCanExecuteChanged();
-            ((RelayCommand)PercentCommand).NotifyCanExecuteChanged();
-        }
-    }
-
-    private bool CanCalculate() => !hasError && !string.IsNullOrEmpty(expression);
-    private bool CanUseDecimal() => !hasError && !Display.Contains('.') && Display.Length < MAX_DISPLAY_LENGTH;
-    private bool CanUsePercent() => !hasError && double.TryParse(Display, out _);
-
+    #region Private Methods
     private void OnNumberPressed(string? number)
     {
         if (number == null || hasError) return;
@@ -173,6 +180,10 @@ public partial class CalcViewModel : ObservableObject
         Display = FormatResult(number);
     }
 
+    private bool CanCalculate() => !hasError && !string.IsNullOrEmpty(expression);
+    private bool CanUseDecimal() => !hasError && !Display.Contains('.') && Display.Length < MAX_DISPLAY_LENGTH;
+    private bool CanUsePercent() => !hasError && double.TryParse(Display, out _);
+
     private static double EvaluateExpression(string expression)
     {
         var table = new DataTable();
@@ -192,7 +203,7 @@ public partial class CalcViewModel : ObservableObject
         return Math.Round(number, DECIMAL_PLACES).ToString(CultureInfo.InvariantCulture);
     }
 
-    private string FormatDisplayValue(string value)
+    private static string FormatDisplayValue(string value)
     {
         if (value == ERROR_MESSAGE || value == INFINITY_MESSAGE || value.EndsWith("."))
             return value;
@@ -202,4 +213,5 @@ public partial class CalcViewModel : ObservableObject
 
         return value;
     }
+    #endregion
 }

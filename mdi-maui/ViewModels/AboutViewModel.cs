@@ -7,47 +7,56 @@ namespace mdi_maui.ViewModels;
 
 public partial class AboutViewModel : ObservableObject
 {
+    #region Fields
     private const string AppVersion = "0.1";
-
-    // Referência à janela pai para manipular o fechamento
     private readonly MDIWindow? _parentWindow;
+    #endregion
+
+    #region Properties
+    [ObservableProperty]
+    private string version = string.Empty;
 
     [ObservableProperty]
-    private string version;
+    private string dotNetVersion = string.Empty;
 
-    [ObservableProperty]
-    private string dotNetVersion;
+    public IRelayCommand CloseThisWindowCommand { get; private set; } = null!;
+    public IRelayCommand OpenGitHubCommand { get; private set; } = null!;
+    #endregion
 
+    #region Constructor
     public AboutViewModel(MDIWindow? parentWindow)
     {
         _parentWindow = parentWindow;
+        InitializeProperties();
+        InitializeCommands();
+    }
+    #endregion
 
-        // Definir a versão do aplicativo
+    #region Private Methods
+    private void InitializeProperties()
+    {
         Version = $"{AppVersion}-{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit[..7]}-{ThisAssembly.Git.CommitDate}";
-
-        // Definir a versão do .NET
         DotNetVersion = RuntimeInformation.FrameworkDescription;
-
-        // Inicializar o comando de fechamento usando o método Close da MDIWindow
-        CloseThisWindowCommand = new RelayCommand(CloseWindow);
-        OpenGitHubCommand = new RelayCommand(async () => await OpenGitHub());
     }
 
-    public IRelayCommand CloseThisWindowCommand { get; }
-    public IRelayCommand OpenGitHubCommand { get; }
+    private void InitializeCommands()
+    {
+        CloseThisWindowCommand = new RelayCommand(CloseWindow);
+        OpenGitHubCommand = new AsyncRelayCommand(OpenGitHub);
+    }
 
     private void CloseWindow()
     {
-        // Garante que a janela seja fechada se _parentWindow for válida
         _parentWindow?.Close();
     }
 
     private async Task OpenGitHub()
     {
-        var url = "https://github.com/fpedrolucas95/MauiGnome";
+        const string url = "https://github.com/fpedrolucas95/MauiGnome";
         if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
         {
             await Launcher.OpenAsync(uri);
         }
     }
+    #endregion
 }
