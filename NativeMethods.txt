@@ -1,4 +1,0 @@
-LoadCursor
-SetCursor
-IDC_*
-HINSTANCE
