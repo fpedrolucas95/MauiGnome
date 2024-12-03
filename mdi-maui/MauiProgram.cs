@@ -36,5 +36,7 @@ public static class MauiProgram
         builder.Services.AddTransient<CalcView>();
         builder.Services.AddTransient<AboutViewModel>();
         builder.Services.AddTransient<AboutView>();
+        builder.Services.AddTransient<PaintViewModel>();
+        builder.Services.AddTransient<PaintView>();
     }
 }

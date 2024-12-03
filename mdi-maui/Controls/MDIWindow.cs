@@ -18,11 +18,18 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
     private bool _isMoving;
     private bool _isResizing;
     private bool _isClosing;
+    private bool _isMaximized;
+    private Rect _previousBounds;
+
     private readonly PanGestureRecognizer _panGesture;
+
     private readonly Grid _mainGrid;
+
     private readonly ContentView _contentView;
     private readonly BoxView _resizeHandle;
     private readonly Image _closeButtonImage;
+    private readonly Image _maximizeButtonImage;
+
     private readonly Grid _titleBar;
     private readonly Border _windowBorder;
     private readonly Label _titleLabel;
@@ -36,24 +43,26 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
     public event EventHandler? Closing;
     public event EventHandler? Closed;
     public new event PropertyChangedEventHandler? PropertyChanged;
+
     #endregion
 
     #region Constructor
     public MDIWindow()
     {
         _panGesture = new PanGestureRecognizer();
-        _mainGrid = MDIWindow.CreateMainGrid();
+        _mainGrid = CreateMainGrid();
         _contentView = new ContentView();
-        _resizeHandle = MDIWindow.CreateResizeHandle();
-
+        _resizeHandle = CreateResizeHandle();
         CloseCommand = new RelayCommand(Close);
 
         _closeButtonImage = new Image { WidthRequest = 24 };
+        _maximizeButtonImage = new Image { WidthRequest = 24 };
+
         _titleLabel = new Label();
         _iconImage = new Image();
         _separator = new BoxView();
 
-        _windowBorder = MDIWindow.CreateWindowBorder();
+        _windowBorder = CreateWindowBorder();
         _titleBar = CreateTitleBar();
 
         InitializeWindow();
@@ -64,7 +73,10 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
         {
             Application.Current.RequestedThemeChanged += OnRequestedThemeChanged;
         }
+
+        UpdateMaximizeButton();
     }
+
     #endregion
 
     #region Properties
@@ -146,7 +158,6 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
     }
 
     public MDIContainer? ParentContainer { get; set; }
-
     public bool HasIcon => !string.IsNullOrEmpty(Icon);
     #endregion
 
@@ -170,8 +181,8 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
     public void Close()
     {
         if (_isClosing) return;
-
         _isClosing = true;
+
         try
         {
             if (IsModified && !SaveChanges())
@@ -191,6 +202,7 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
     {
         _panGesture.PanUpdated -= OnPanUpdated;
         _resizeHandle.GestureRecognizers.Clear();
+
         Activated = null;
         Deactivated = null;
         Closing = null;
@@ -211,11 +223,11 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
         double containerWidth = ParentContainer.Width;
         double containerHeight = ParentContainer.Height;
 
-        double maxX = Math.Max(0, containerWidth - WindowWidth);
-        double maxY = Math.Max(0, containerHeight - WindowHeight);
+        X = Math.Clamp(X, 0, containerWidth - WindowWidth);
+        Y = Math.Clamp(Y, 0, containerHeight - WindowHeight);
 
-        X = Math.Clamp(X, 0, maxX);
-        Y = Math.Clamp(Y, 0, maxY);
+        WindowWidth = Math.Min(WindowWidth, containerWidth);
+        WindowHeight = Math.Min(WindowHeight, containerHeight);
     }
 
     public double GetDistanceTo(MDIWindow otherWindow)
@@ -231,7 +243,6 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
         double rightDiff = Math.Abs((X + WindowWidth) - otherWindow.X);
         double topDiff = Math.Abs(Y - (otherWindow.Y + otherWindow.WindowHeight));
         double bottomDiff = Math.Abs((Y + WindowHeight) - otherWindow.Y);
-
         double minDiff = new[] { leftDiff, rightDiff, topDiff, bottomDiff }.Min();
 
         if (minDiff == leftDiff)
@@ -253,15 +264,42 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
 
         AdjustPosition();
     }
+
+    public void Maximize()
+    {
+        if (ParentContainer == null) return;
+
+        _isMaximized = true;
+
+        _previousBounds = new Rect(X, Y, WindowWidth, WindowHeight);
+
+        X = 0;
+        Y = 0;
+        WindowWidth = ParentContainer.Width;
+        WindowHeight = ParentContainer.Height;
+
+        UpdateMaximizeButton();
+    }
+
+    public void Restore()
+    {
+        if (!_isMaximized) return;
+
+        _isMaximized = false;
+
+        X = _previousBounds.X;
+        Y = _previousBounds.Y;
+        WindowWidth = _previousBounds.Width;
+        WindowHeight = _previousBounds.Height;
+
+        UpdateMaximizeButton();
+    }
     #endregion
 
     #region Private Methods
     private void InitializeWindow()
     {
         _panGesture.PanUpdated += OnPanUpdated;
-
-        var tapGesture = new TapGestureRecognizer();
-        tapGesture.Tapped += OnTitleBarTapped;
 
         var resizePanGesture = new PanGestureRecognizer();
         resizePanGesture.PanUpdated += OnResizePanUpdated;
@@ -282,34 +320,9 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
         closeTapGesture.SetBinding(TapGestureRecognizer.CommandProperty, new Binding(nameof(CloseCommand), source: this));
         _closeButtonImage.GestureRecognizers.Add(closeTapGesture);
 
-        _iconImage.WidthRequest = 16;
-        _iconImage.HeightRequest = 16;
-        _iconImage.Margin = 8;
-        _iconImage.VerticalOptions = LayoutOptions.Center;
-        _iconImage.HorizontalOptions = LayoutOptions.Start;
-        _iconImage.SetBinding(Image.SourceProperty, new Binding(nameof(Icon), source: this));
-        _iconImage.SetBinding(IsVisibleProperty, new Binding(nameof(HasIcon), source: this));
-
-        _titleLabel.FontSize = 13;
-        _titleLabel.FontFamily = "Quicksand-Light";
-        _titleLabel.VerticalOptions = LayoutOptions.Center;
-        _titleLabel.SetBinding(Label.TextProperty, new Binding(nameof(Title), source: this));
-
-        _separator.VerticalOptions = LayoutOptions.End;
-        _separator.HeightRequest = 1;
-
-        _mainGrid.Children.Add(_titleBar);
-        _mainGrid.Children.Add(_separator);
-        _mainGrid.Children.Add(_contentView);
-        _mainGrid.Children.Add(_resizeHandle);
-
-        Grid.SetRow(_separator, 0);
-        Grid.SetRow(_contentView, 1);
-        Grid.SetRow(_resizeHandle, 1);
-
-        _windowBorder.Content = _mainGrid;
-        Content = _windowBorder;
         BackgroundColor = Colors.Transparent;
+
+        Content = _windowBorder;
     }
 
     private static Grid CreateMainGrid()
@@ -340,8 +353,12 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
     {
         var border = new Border
         {
-            StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(10) }
+            StrokeShape = new RoundRectangle
+            {
+                CornerRadius = new CornerRadius(10)
+            }
         };
+
         return border;
     }
 
@@ -351,9 +368,9 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
         {
             ColumnDefinitions =
             {
-                new ColumnDefinition { Width = GridLength.Auto },
-                new ColumnDefinition { Width = GridLength.Auto },
+                new ColumnDefinition { Width = GridLength.Auto }, 
                 new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) },
+                new ColumnDefinition { Width = GridLength.Auto },
                 new ColumnDefinition { Width = GridLength.Auto }
             },
             HeightRequest = 32
@@ -362,18 +379,62 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
         titleBar.GestureRecognizers.Add(_panGesture);
         titleBar.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(OnTitleBarTapped) });
 
+        _iconImage.WidthRequest = 16;
+        _iconImage.HeightRequest = 16;
+        _iconImage.Margin = 8;
+        _iconImage.VerticalOptions = LayoutOptions.Center;
+        _iconImage.HorizontalOptions = LayoutOptions.Start;
+        _iconImage.SetBinding(Image.SourceProperty, new Binding(nameof(Icon), source: this));
+        _iconImage.SetBinding(IsVisibleProperty, new Binding(nameof(HasIcon), source: this));
+
         titleBar.Children.Add(_iconImage);
         Grid.SetColumn(_iconImage, 0);
         Grid.SetRow(_iconImage, 0);
+
+        _titleLabel.FontSize = 13;
+        _titleLabel.VerticalOptions = LayoutOptions.Center;
+        _titleLabel.SetBinding(Label.TextProperty, new Binding(nameof(Title), source: this));
 
         titleBar.Children.Add(_titleLabel);
         Grid.SetColumn(_titleLabel, 1);
         Grid.SetRow(_titleLabel, 0);
 
-        var closeButtonBorder = new Border { Stroke = Colors.Transparent, Content = _closeButtonImage, Margin = new(0, 0, 4, 0) };
+        var maximizeTapGesture = new TapGestureRecognizer();
+        maximizeTapGesture.Tapped += OnMaximizeButtonTapped;
+        _maximizeButtonImage.GestureRecognizers.Add(maximizeTapGesture);
+        _maximizeButtonImage.WidthRequest = 16;
+        _maximizeButtonImage.HeightRequest = 16;
+
+        titleBar.Children.Add(_maximizeButtonImage);
+        Grid.SetColumn(_maximizeButtonImage, 2);
+        Grid.SetRow(_maximizeButtonImage, 0);
+
+        var closeButtonBorder = new Border
+        {
+            Stroke = Colors.Transparent,
+            Content = _closeButtonImage,
+            Margin = new(0, 0, 4, 0)
+        };
+
         titleBar.Children.Add(closeButtonBorder);
         Grid.SetColumn(closeButtonBorder, 3);
         Grid.SetRow(closeButtonBorder, 0);
+
+        _mainGrid.Children.Add(titleBar);
+        Grid.SetRow(titleBar, 0);
+
+        _separator.VerticalOptions = LayoutOptions.End;
+        _separator.HeightRequest = 1;
+        _mainGrid.Children.Add(_separator);
+        Grid.SetRow(_separator, 0);
+
+        _mainGrid.Children.Add(_contentView);
+        Grid.SetRow(_contentView, 1);
+
+        _mainGrid.Children.Add(_resizeHandle);
+        Grid.SetRow(_resizeHandle, 1);
+
+        _windowBorder.Content = _mainGrid;
 
         return titleBar;
     }
@@ -381,11 +442,11 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
     private void UpdateTheme()
     {
         var currentTheme = Application.Current?.RequestedTheme ?? AppTheme.Light;
-        var titleBarBackgroundColor = MDIWindow.GetColor("#E4E4D5", "#22201f90");
-        var windowBackgroundColor = MDIWindow.GetColor("#FFFFFF", "#1a1a1a");
-        var borderColor = MDIWindow.GetColor("#20000000", "#20FFFFFF");
-        var separatorColor = MDIWindow.GetColor("#09000000", "#09FFFFFF");
-        var textColor = MDIWindow.GetColor("#000000", "#FFFFFF");
+        var titleBarBackgroundColor = GetColor("#E4E4D5", "#22201f90");
+        var windowBackgroundColor = GetColor("#FFFFFF", "#1a1a1a");
+        var borderColor = GetColor("#20000000", "#20FFFFFF");
+        var separatorColor = GetColor("#09000000", "#09FFFFFF");
+        var textColor = GetColor("#000000", "#FFFFFF");
 
         _titleBar.BackgroundColor = titleBarBackgroundColor;
         _windowBorder.BackgroundColor = windowBackgroundColor;
@@ -393,8 +454,10 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
         _separator.BackgroundColor = separatorColor;
         _titleLabel.TextColor = textColor;
 
-        var closeButtonImageSource = MDIWindow.GetImageSource("light_close.png", "dark_close.png");
+        var closeButtonImageSource = GetImageSource("light_close.png", "dark_close.png");
         _closeButtonImage.Source = closeButtonImageSource;
+
+        UpdateMaximizeButton();
     }
 
     private static Color GetColor(string lightColor, string darkColor)
@@ -414,8 +477,31 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
         UpdateTheme();
     }
 
+    private void UpdateMaximizeButton()
+    {
+        string maximizeImage = _isMaximized
+            ? GetImageSource("light_restore.png", "dark_restore.png")
+            : GetImageSource("light_maximize.png", "dark_maximize.png");
+
+        _maximizeButtonImage.Source = maximizeImage;
+    }
+
+    private void OnMaximizeButtonTapped(object? sender, EventArgs e)
+    {
+        if (_isMaximized)
+        {
+            Restore();
+        }
+        else
+        {
+            Maximize();
+        }
+    }
+
     private void OnPanUpdated(object? sender, PanUpdatedEventArgs e)
     {
+        if (_isMaximized) return;
+
         switch (e.StatusType)
         {
             case GestureStatus.Started:
@@ -444,7 +530,7 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
 
     private void OnResizePanUpdated(object? sender, PanUpdatedEventArgs e)
     {
-        if (Resize == false) return;
+        if (!Resize || _isMaximized) return;
 
         switch (e.StatusType)
         {
@@ -457,9 +543,17 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
             case GestureStatus.Running:
                 if (_isResizing)
                 {
-                    WindowWidth = Math.Max(MinWidth, _panStart.X + e.TotalX);
-                    WindowHeight = Math.Max(MinHeight, _panStart.Y + e.TotalY);
-                    AdjustPosition();
+                    double newWidth = Math.Max(MinWidth, _panStart.X + e.TotalX);
+                    double newHeight = Math.Max(MinHeight, _panStart.Y + e.TotalY);
+
+                    if (ParentContainer != null)
+                    {
+                        newWidth = Math.Min(newWidth, ParentContainer.Width - X);
+                        newHeight = Math.Min(newHeight, ParentContainer.Height - Y);
+                    }
+
+                    WindowWidth = newWidth;
+                    WindowHeight = newHeight;
                 }
                 break;
 
@@ -469,7 +563,6 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
                 break;
         }
     }
-
 
     private void OnTitleBarTapped()
     {

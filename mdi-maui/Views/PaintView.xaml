@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:mct="clr-namespace:CommunityToolkit.Maui.Views;assembly=CommunityToolkit.Maui"
+             x:Class="mdi_maui.Views.PaintView">
+    <Grid RowDefinitions="24, *, 24" ColumnDefinitions="60, 2*">
+        <!-- Toolbar -->
+        <StackLayout Orientation="Horizontal" Grid.Row="0" Grid.ColumnSpan="2" BackgroundColor="{AppThemeBinding Light={StaticResource BorderColorLight}, Dark={StaticResource BackgroundDark}}" Spacing="8">
+            <Border Style="{StaticResource ButtonStyle}" Margin="8,0,0,0">
+                <Label Text="Salvar" FontSize="12">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSaveButtonPressed"/>
+                    </Label.GestureRecognizers>
+                </Label>
+            </Border>
+            <Border Style="{StaticResource ButtonStyle}">
+                <Label Text="Limpar" FontSize="12">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="ClearDrawingView_Clicked"/>
+                    </Label.GestureRecognizers>
+                </Label>
+            </Border>
+        </StackLayout>
+
+        <!-- Drawing Area -->
+        <StackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+            <mct:DrawingView x:Name="DrawingCanvas"
+                             BackgroundColor="White"
+                             WidthRequest="800"
+                             HeightRequest="600"
+                             HorizontalOptions="Center"
+                             IsMultiLineModeEnabled="True"
+                             LineColor="{Binding ToolColor}"
+                             LineWidth="{Binding ToolWidth}" />
+        </StackLayout>
+
+        <!-- Controls -->
+        <Grid ColumnDefinitions="Auto, *, Auto" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" ColumnSpacing="8" BackgroundColor="{AppThemeBinding Light={StaticResource BorderColorLight}, Dark={StaticResource BackgroundDark}}">
+            <Label Grid.Column="0" FontSize="12" Text="{Binding ToolWidth, StringFormat='Tamanho: {0}'}" VerticalOptions="Center" Margin="8,0"/>
+            <Slider Grid.Column="1" x:Name="ChangeWidth" Minimum="1" Maximum="10" Value="{Binding ToolWidth}" Margin="0,-4,0,0" />
+            <HorizontalStackLayout Grid.Column="2" HorizontalOptions="End" Margin="0,0,16,0">
+                <BoxView BackgroundColor="Red" WidthRequest="24" HeightRequest="24">
+                    <BoxView.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChangeColorCommand}" CommandParameter="Red"/>
+                    </BoxView.GestureRecognizers>
+                </BoxView>
+                <BoxView BackgroundColor="Blue" WidthRequest="24" HeightRequest="24">
+                    <BoxView.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChangeColorCommand}" CommandParameter="Blue"/>
+                    </BoxView.GestureRecognizers>
+                </BoxView>
+                <BoxView BackgroundColor="Black" WidthRequest="24" HeightRequest="24">
+                    <BoxView.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChangeColorCommand}" CommandParameter="Black"/>
+                    </BoxView.GestureRecognizers>
+                </BoxView>
+                <BoxView BackgroundColor="White" WidthRequest="24" HeightRequest="24">
+                    <BoxView.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChangeColorCommand}" CommandParameter="White"/>
+                    </BoxView.GestureRecognizers>
+                </BoxView>
+                <BoxView BackgroundColor="Green" WidthRequest="24" HeightRequest="24">
+                    <BoxView.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChangeColorCommand}" CommandParameter="Green"/>
+                    </BoxView.GestureRecognizers>
+                </BoxView>
+                <BoxView BackgroundColor="Yellow" WidthRequest="24" HeightRequest="24">
+                    <BoxView.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChangeColorCommand}" CommandParameter="Yellow"/>
+                    </BoxView.GestureRecognizers>
+                </BoxView>
+            </HorizontalStackLayout>
+        </Grid>
+    </Grid>
+</ContentView>

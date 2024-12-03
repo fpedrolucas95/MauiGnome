@@ -16,6 +16,13 @@ public partial class MainViewModel : ObservableObject
     #endregion
 
     #region Properties
+    private bool _isMenuVisible;
+    public bool IsMenuVisible
+    {
+        get => _isMenuVisible;
+        set => SetProperty(ref _isMenuVisible, value);
+    }
+
     [ObservableProperty]
     private ObservableCollection<MDIWindow> windows = new();
 
@@ -34,8 +41,11 @@ public partial class MainViewModel : ObservableObject
     #endregion
 
     #region Commands
+    public IRelayCommand ToggleMenuCommand { get; }
     public IRelayCommand OpenCalculatorCommand { get; }
+    public IRelayCommand OpenPaintCommand { get; }
     public IRelayCommand OpenAboutCommand { get; }
+    public IRelayCommand HideMenuCommand { get; }
     public IRelayCommand CascadeCommand { get; }
     public IRelayCommand CloseAllWindowsCommand { get; }
     public IRelayCommand SwitchThemeCommand { get; }
@@ -45,13 +55,17 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel(MDIContainer container)
     {
         _container = container;
-        Windows.CollectionChanged += OnWindowsCollectionChanged;
 
+        ToggleMenuCommand = new RelayCommand(ToggleMenu);
         OpenCalculatorCommand = new RelayCommand(OpenCalculatorWindow);
+        OpenPaintCommand = new RelayCommand(OpenPaintWindow);
         OpenAboutCommand = new RelayCommand(OpenAboutWindow);
+        HideMenuCommand = new RelayCommand(HideMenu);
         CascadeCommand = new RelayCommand(CascadeWindows);
         CloseAllWindowsCommand = new RelayCommand(CloseAllWindows);
         SwitchThemeCommand = new RelayCommand(ToggleTheme);
+
+        Windows.CollectionChanged += OnWindowsCollectionChanged;
 
         _timer = Application.Current?.Dispatcher?.CreateTimer() ?? throw new InvalidOperationException("Dispatcher not available");
         _timer.Interval = TimeSpan.FromSeconds(1);
@@ -71,8 +85,19 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(IsCloseVisible));
     }
 
+    private void ToggleMenu()
+    {
+        IsMenuVisible = !IsMenuVisible;
+    }
+
+    private void HideMenu()
+    {
+        IsMenuVisible = false;
+    }
+
     private void OpenCalculatorWindow()
     {
+        HideMenu();
         var calcView = new CalcView();
         var mdiWindow = CreateMDIWindow("Calculadora", calcView, 320, 480, GetIcon("calculator"));
         mdiWindow.Closed += (_, _) => Windows.Remove(mdiWindow);
@@ -80,8 +105,19 @@ public partial class MainViewModel : ObservableObject
         ActiveWindow = mdiWindow;
     }
 
+    private void OpenPaintWindow()
+    {
+        HideMenu();
+        var paintView = new PaintView();
+        var mdiWindow = CreateMDIWindow("Paint", paintView, 480, 380, GetIcon("paint"));
+        mdiWindow.Closed += (_, _) => Windows.Remove(mdiWindow);
+        Windows.Add(mdiWindow);
+        ActiveWindow = mdiWindow;
+    }
+
     private void OpenAboutWindow()
     {
+        HideMenu();
         var aboutView = new AboutView();
         var mdiWindow = CreateMDIWindow("Sobre", aboutView, 280, 300, GetIcon("about"), false);
 
@@ -150,6 +186,7 @@ public partial class MainViewModel : ObservableObject
             {
                 "calculadora" => "calculator",
                 "sobre" => "about",
+                "paint" => "paint",
                 _ => "default"
             });
         }
