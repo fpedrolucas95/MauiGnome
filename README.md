@@ -70,8 +70,10 @@ window.Close();
 
 ## 🧪 Exemplo Prático
 
-Este repositório inclui uma aplicação de exemplo demonstrando:
+Este repositório inclui algumas aplicações de exemplo demonstrando:
 - Calculadora funcional com múltiplas instâncias
+- Aplicativo de desenho com seleção de cores
+- Gráfico de candles
 - Interface inspirada no GNOME
 - Implementação completa dos recursos
 
