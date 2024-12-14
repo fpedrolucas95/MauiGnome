@@ -1,0 +1,13 @@
+﻿################################################################################
+# Este arquivo .gitignore foi criado automaticamente pelo Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/mdi-maui/CopilotIndices/17.12.31.40377
+/.vs/mdi-maui/DesignTimeBuild
+/.vs/mdi-maui/FileContentIndex
+/.vs/mdi-maui/v17
+/.vs/ProjectEvaluation
+/.vs
+/mdi-maui/obj
+/mdi-maui/bin/Debug/net8.0-windows10.0.19041.0/win10-x64/AppX
+/mdi-maui/bin/Debug/net8.0-windows10.0.19041.0/win10-x64
