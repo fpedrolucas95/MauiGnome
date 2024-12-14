@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="mdi_maui.Views.CalcView"
+             xmlns:viewmodel="clr-namespace:mdi_maui.ViewModels">
+    <Grid ColumnDefinitions="*,*,*,*" RowDefinitions="*,*,*,*,*,*" RowSpacing="4" ColumnSpacing="4" Padding="6"
+          BackgroundColor="{AppThemeBinding Light={StaticResource WindowBackgroundLight}, Dark={StaticResource WindowBackgroundDark}}">
+        <Label Text="{Binding Display}"
+               Grid.ColumnSpan="4"
+               HorizontalTextAlignment="End"
+               VerticalTextAlignment="End"
+               FontSize="48"
+               TextColor="{AppThemeBinding Light=Black, Dark=White}"
+               Padding="20,0"/>
+        <Button Text="AC" FontSize="18"
+                Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                Command="{Binding ClearCommand}"
+                BackgroundColor="#A5A5A5"
+                TextColor="{AppThemeBinding Light=White, Dark=Black}"/>
+        <Button Text="%" FontSize="18"
+                Grid.Row="1" Grid.Column="2"
+                Command="{Binding PercentCommand}"
+                BackgroundColor="#A5A5A5"
+                TextColor="{AppThemeBinding Light=White, Dark=Black}"/>
+        <Button Text="÷" FontSize="18"
+                Grid.Row="1" Grid.Column="3"
+                Command="{Binding OperatorCommand}"
+                CommandParameter="/"
+                BackgroundColor="{AppThemeBinding Light=#0060F5, Dark=#FF9F0A}"/>
+        <Button Text="7" FontSize="18"
+                Grid.Row="2" Grid.Column="0"
+                Command="{Binding NumberCommand}"
+                CommandParameter="7"
+                BackgroundColor="{AppThemeBinding Light=#5A5A5A, Dark=#333333}"
+                TextColor="{AppThemeBinding Light=White, Dark=White}"/>
+        <Button Text="8" FontSize="18"
+                Grid.Row="2" Grid.Column="1"
+                Command="{Binding NumberCommand}"
+                CommandParameter="8"
+                BackgroundColor="{AppThemeBinding Light=#5A5A5A, Dark=#333333}"
+                TextColor="{AppThemeBinding Light=White, Dark=White}"/>
+        <Button Text="9" FontSize="18"
+                Grid.Row="2" Grid.Column="2"
+                Command="{Binding NumberCommand}"
+                CommandParameter="9"
+                BackgroundColor="{AppThemeBinding Light=#5A5A5A, Dark=#333333}"
+                TextColor="{AppThemeBinding Light=White, Dark=White}"/>
+        <Button Text="×" FontSize="18"
+                Grid.Row="2" Grid.Column="3"
+                Command="{Binding OperatorCommand}"
+                CommandParameter="*"
+                BackgroundColor="{AppThemeBinding Light=#0060F5, Dark=#FF9F0A}"/>
+        <Button Text="4" FontSize="18"
+                Grid.Row="3" Grid.Column="0"
+                Command="{Binding NumberCommand}"
+                CommandParameter="4"
+                BackgroundColor="{AppThemeBinding Light=#5A5A5A, Dark=#333333}"
+                TextColor="{AppThemeBinding Light=White, Dark=White}"/>
+        <Button Text="5" FontSize="18"
+                Grid.Row="3" Grid.Column="1"
+                Command="{Binding NumberCommand}"
+                CommandParameter="5"
+                BackgroundColor="{AppThemeBinding Light=#5A5A5A, Dark=#333333}"
+                TextColor="{AppThemeBinding Light=White, Dark=White}"/>
+        <Button Text="6" FontSize="18"
+                Grid.Row="3" Grid.Column="2"
+                Command="{Binding NumberCommand}"
+                CommandParameter="6"
+                BackgroundColor="{AppThemeBinding Light=#5A5A5A, Dark=#333333}"
+                TextColor="{AppThemeBinding Light=White, Dark=White}"/>
+        <Button Text="-" FontSize="18"
+                Grid.Row="3" Grid.Column="3"
+                Command="{Binding OperatorCommand}"
+                CommandParameter="-"
+                BackgroundColor="{AppThemeBinding Light=#0060F5, Dark=#FF9F0A}"/>
+        <Button Text="1" FontSize="18"
+                Grid.Row="4" Grid.Column="0"
+                Command="{Binding NumberCommand}"
+                CommandParameter="1"
+                BackgroundColor="{AppThemeBinding Light=#5A5A5A, Dark=#333333}"
+                TextColor="{AppThemeBinding Light=White, Dark=White}"/>
+        <Button Text="2" FontSize="18"
+                Grid.Row="4" Grid.Column="1"
+                Command="{Binding NumberCommand}"
+                CommandParameter="2"
+                BackgroundColor="{AppThemeBinding Light=#5A5A5A, Dark=#333333}"
+                TextColor="{AppThemeBinding Light=White, Dark=White}"/>
+        <Button Text="3" FontSize="18"
+                Grid.Row="4" Grid.Column="2"
+                Command="{Binding NumberCommand}"
+                CommandParameter="3"
+                BackgroundColor="{AppThemeBinding Light=#5A5A5A, Dark=#333333}"
+                TextColor="{AppThemeBinding Light=White, Dark=White}"/>
+        <Button Text="+" FontSize="18"
+                Grid.Row="4" Grid.Column="3"
+                Command="{Binding OperatorCommand}"
+                CommandParameter="+"
+                BackgroundColor="{AppThemeBinding Light=#0060F5, Dark=#FF9F0A}"/>
+        <Button Text="0" FontSize="18"
+                Grid.Row="5" Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Command="{Binding NumberCommand}"
+                CommandParameter="0"
+                BackgroundColor="{AppThemeBinding Light=#5A5A5A, Dark=#333333}"
+                TextColor="{AppThemeBinding Light=White, Dark=White}"/>
+        <Button Text="." FontSize="18"
+                Grid.Row="5" Grid.Column="2"
+                Command="{Binding DecimalCommand}"
+                BackgroundColor="{AppThemeBinding Light=#5A5A5A, Dark=#333333}"
+                TextColor="{AppThemeBinding Light=White, Dark=White}"/>
+        <Button Text="=" FontSize="18"
+                Grid.Row="5" Grid.Column="3"
+                Command="{Binding CalculateCommand}"
+                BackgroundColor="{AppThemeBinding Light=#0060F5, Dark=#FF9F0A}"/>
+    </Grid>
+</ContentView>

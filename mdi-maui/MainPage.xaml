@@ -1,0 +1,93 @@
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:mdi_maui.Controls"
+             xmlns:viewmodels="clr-namespace:mdi_maui.ViewModels"
+             x:Class="mdi_maui.MainPage"
+             Title="MDI App"
+             x:DataType="viewmodels:MainViewModel">
+
+    <Grid>
+        <!-- Interface Principal -->
+        <Grid RowDefinitions="32,*,20">
+            <!-- Barra Superior -->
+            <Grid Grid.Row="0" BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}">
+                <Grid Margin="8,0" ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="8">
+                    <!-- Menu -->
+                    <Border Grid.Column="0" Padding="8,0" StrokeShape="RoundRectangle 3" VerticalOptions="Center">
+                        <Label Text="Menu" VerticalOptions="Center" />
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ToggleMenuCommand}" />
+                        </Border.GestureRecognizers>
+                    </Border>
+
+                    <Image Grid.Column="2" Style="{StaticResource IconStyle}" Source="{AppThemeBinding Light=light_settings.png, Dark=dark_settings.png}" Margin="0,2,0,0" ToolTipProperties.Text="Mudar tema da aplicação">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SwitchThemeCommand}" />
+                        </Image.GestureRecognizers>
+                    </Image>
+                    <Label Grid.Column="3" Text="{Binding CurrentTime}" Padding="8,0" VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" ToolTipProperties.Text="{Binding CurrentDate}" />
+                </Grid>
+            </Grid>
+
+            <!-- Conteúdo Principal -->
+            <Border Grid.Row="1" Stroke="{AppThemeBinding Light={StaticResource ContainerPrimaryLight}, Dark={StaticResource ContainerPrimaryDark}}" Margin="2" StrokeShape="RoundRectangle 12">
+                <Grid>
+                    <Image Source="background.jpg" Aspect="Fill" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" />
+                    <controls:MDIContainer x:Name="MDIContainer" 
+                                       Windows="{Binding Windows}"
+                                       ActiveWindow="{Binding ActiveWindow, Mode=TwoWay}" 
+                                       HorizontalOptions="Fill" 
+                                       VerticalOptions="Fill"
+                                       Background="Transparent"/>
+                </Grid>
+            </Border>
+
+            <!-- Barra Inferior -->
+            <Grid Grid.Row="2">
+                <HorizontalStackLayout Spacing="8" Margin="8,0">
+                    <Label Text="Quantidade de janelas abertas:" TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" FontSize="11"/>
+                    <Label Text="{Binding WindowOpen}" TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" FontSize="11" Margin="-4,0"/>
+                    <Border Style="{StaticResource ButtonStyle}" Padding="8,0" Margin="0,-1" StrokeShape="RoundRectangle 3" VerticalOptions="Start" IsVisible="{Binding IsCloseVisible}">
+                        <Label Text="Fechar todas as janelas" FontSize="11" VerticalOptions="Center"/>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding CloseAllWindowsCommand}"/>
+                        </Border.GestureRecognizers>
+                    </Border>
+                </HorizontalStackLayout>
+            </Grid>
+        </Grid>
+
+        <!-- Fundo Clicável -->
+        <BoxView IsVisible="{Binding IsMenuVisible}" BackgroundColor="Transparent" InputTransparent="False">
+            <BoxView.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding HideMenuCommand}" />
+            </BoxView.GestureRecognizers>
+        </BoxView>
+
+        <!-- Janela Flutuante -->
+        <Grid x:Name="FloatingMenu" IsVisible="{Binding IsMenuVisible}" ZIndex="100">
+            <VerticalStackLayout HorizontalOptions="Start" VerticalOptions="Start" Margin="8,32,0,0" BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}" WidthRequest="150">
+                <Label Text="Calculadora" Padding="8" >
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding OpenCalculatorCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Label Text="Paint" Padding="8">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding OpenPaintCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Label Text="Gráfico" Padding="8">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding OpenChartCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+                <Label Text="Sobre" Padding="8">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding OpenAboutCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+</ContentPage>

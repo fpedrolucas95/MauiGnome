@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:mdi_maui.Controls"
+             x:Class="mdi_maui.Views.ChartView"
+             BackgroundColor="{AppThemeBinding Light={StaticResource BorderColorLight}, Dark={StaticResource BackgroundDark}}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="28" />
+        </Grid.RowDefinitions>
+
+        <controls:CandlestickChartView x:Name="CandleChart"
+                                       Grid.Row="0"
+                                       CandlestickSeries="{Binding CandlestickSeries}"
+                                       VerticalOptions="Fill"
+                                       HorizontalOptions="Fill" />
+
+        <HorizontalStackLayout Grid.Row="1" Padding="5">
+            <Border Style="{StaticResource ButtonStyle}" Margin="8,-2,0,0">
+                <Label Text="2 Min" FontSize="12">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChangeIntervalCommand}" CommandParameter="120"/>
+                    </Label.GestureRecognizers>
+                </Label>
+            </Border>
+            <Border Style="{StaticResource ButtonStyle}" Margin="8,-2,0,0">
+                <Label Text="5 Min" FontSize="12">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChangeIntervalCommand}" CommandParameter="300"/>
+                    </Label.GestureRecognizers>
+                </Label>
+            </Border>
+            <Border Style="{StaticResource ButtonStyle}" Margin="8,-2,0,0">
+                <Label Text="15 Min" FontSize="12">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChangeIntervalCommand}" CommandParameter="900"/>
+                    </Label.GestureRecognizers>
+                </Label>
+            </Border>
+            <Border Style="{StaticResource ButtonStyle}" Margin="8,-2,0,0">
+                <Label Text="30 Min" FontSize="12">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChangeIntervalCommand}" CommandParameter="1800"/>
+                    </Label.GestureRecognizers>
+                </Label>
+            </Border>
+            <Border Style="{StaticResource ButtonStyle}" Margin="8,-2,0,0">
+                <Label Text="60 Min" FontSize="12">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChangeIntervalCommand}" CommandParameter="3600"/>
+                    </Label.GestureRecognizers>
+                </Label>
+            </Border>
+        </HorizontalStackLayout>
+    </Grid>
+</ContentView>
