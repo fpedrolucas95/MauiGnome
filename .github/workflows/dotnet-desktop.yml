@@ -1,4 +1,4 @@
-name: Build MAUI App (Windows and Android)
+name: Build and Package MAUI Project
 
 on:
   push:
@@ -6,54 +6,49 @@ on:
   pull_request:
     branches: [ "main" ]
 
-jobs:
-  build:
-    strategy:
-      matrix:
-        configuration: [Release]
+env:
+  PROJECT_FILE: mdi-maui/mdi-maui.csproj
+  BUILD_CONFIGURATION: Release
+  BUILD_VERSION: 1.0.4
+  DOTNET_VERSION: 8.0.x
 
+jobs:
+  build-windows-android:
     runs-on: windows-latest
 
-    env:
-      PROJECT_FILE: mdi-maui/mdi-maui.csproj
-      BUILD_CONFIGURATION: Release
-      BUILD_VERSION: 1.0.4
-
     steps:
-    # Checkout o código-fonte
-    - name: Checkout
+    # Checkout do repositório
+    - name: Checkout Code
       uses: actions/checkout@v4
 
-    # Instala o .NET SDK e o workload MAUI
-    - name: Install .NET SDK and MAUI Workload
+    # Instalação do .NET SDK
+    - name: Install .NET SDK
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
-    - run: dotnet workload install maui
+        dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    # Gera um certificado autoassinado dinamicamente
+    # Instalação do workload MAUI
+    - name: Install .NET MAUI Workload
+      run: dotnet workload install maui --ignore-failed-sources
+
+    # Gera um certificado autoassinado com OpenSSL
     - name: Generate Self-Signed Certificate
-      shell: powershell
+      shell: bash
       run: |
-        $cert = New-SelfSignedCertificate -Type Custom `
-          -Subject "CN=MAUIGnome" `
-          -KeyUsage DigitalSignature `
-          -FriendlyName "MauiGnomeCertificate" `
-          -CertStoreLocation "Cert:\CurrentUser\My" `
-          -KeyExportPolicy Exportable `
-          -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" `
-          -HashAlgorithm sha256 -KeyLength 2048
+        # Gera certificado autoassinado
+        openssl req -x509 -newkey rsa:2048 -keyout SigningCertificate.key -out SigningCertificate.crt \
+          -days 365 -subj "/CN=MAUIGnome" -passout pass:temporary_password
 
-        $pwd = ConvertTo-SecureString -String "temporary_password" -Force -AsPlainText
-        Export-PfxCertificate -Cert "Cert:\CurrentUser\My\$($cert.Thumbprint)" `
-          -FilePath "SigningCertificate.pfx" -Password $pwd
+        # Converte para formato PFX
+        openssl pkcs12 -export -out SigningCertificate.pfx -inkey SigningCertificate.key \
+          -in SigningCertificate.crt -passin pass:temporary_password -passout pass:temporary_password
 
-    # Restaura dependências para Windows com RuntimeIdentifier
-    - name: Restore Dependencies for Windows
+    # Restaura dependências do projeto
+    - name: Restore Dependencies
       run: dotnet restore ${{ env.PROJECT_FILE }} --runtime win-x64
 
-    # Build para Windows
-    - name: Build Windows Project
+    # Compila o projeto para Windows
+    - name: Build for Windows
       run: |
         dotnet publish ${{ env.PROJECT_FILE }} -c ${{ env.BUILD_CONFIGURATION }} `
           -f net8.0-windows10.0.19041.0 `
@@ -63,25 +58,22 @@ jobs:
           --self-contained false `
           --output ./publish/windows
 
-    # Restaura dependências para Android
-    - name: Restore Dependencies for Android
-      run: dotnet restore ${{ env.PROJECT_FILE }} --runtime android
-
-    # Build para Android
-    - name: Build Android Project
+    # Compila o projeto para Android
+    - name: Build for Android
       run: |
         dotnet publish ${{ env.PROJECT_FILE }} -c ${{ env.BUILD_CONFIGURATION }} `
           -f net8.0-android `
           -p:AndroidPackageFormats=aab `
           --output ./publish/android
 
-    # Upload de artefatos (Windows e Android)
+    # Upload do artefato Windows
     - name: Upload Windows Artifact
       uses: actions/upload-artifact@v3
       with:
         name: Windows Build
         path: ./publish/windows
 
+    # Upload do artefato Android
     - name: Upload Android Artifact
       uses: actions/upload-artifact@v3
       with:
