@@ -8,26 +8,15 @@ namespace mdi_maui.Controls;
 public partial class MDIContainer : ContentView
 {
     #region Properties
-    public static readonly BindableProperty WindowsProperty = BindableProperty.Create(
-        nameof(Windows),
-        typeof(ObservableCollection<MDIWindow>),
-        typeof(MDIContainer),
-        propertyChanged: OnWindowsChanged);
-
-    public ObservableCollection<MDIWindow> Windows
+    public static readonly BindableProperty MDIWindowsProperty = BindableProperty.Create(nameof(MDIWindows), typeof(ObservableCollection<MDIWindow>), typeof(MDIContainer), propertyChanged: OnMDIWindowsChanged);
+    public ObservableCollection<MDIWindow> MDIWindows
     {
-        get => (ObservableCollection<MDIWindow>)GetValue(WindowsProperty);
-        set => SetValue(WindowsProperty, value);
+        get => (ObservableCollection<MDIWindow>)GetValue(MDIWindowsProperty);
+        set => SetValue(MDIWindowsProperty, value);
     }
 
-    public static readonly BindableProperty ActiveWindowProperty = BindableProperty.Create(
-        nameof(ActiveWindow),
-        typeof(MDIWindow),
-        typeof(MDIContainer),
-        null,
-        propertyChanged: OnActiveWindowChanged,
-        defaultBindingMode: BindingMode.TwoWay);
 
+    public static readonly BindableProperty ActiveWindowProperty = BindableProperty.Create(nameof(ActiveWindow), typeof(MDIWindow), typeof(MDIContainer), null, propertyChanged: OnActiveWindowChanged, defaultBindingMode: BindingMode.TwoWay);
     public MDIWindow? ActiveWindow
     {
         get => (MDIWindow?)GetValue(ActiveWindowProperty);
@@ -56,16 +45,16 @@ public partial class MDIContainer : ContentView
     #endregion
 
     #region Private Methods
-    private static void OnWindowsChanged(BindableObject bindable, object oldValue, object newValue)
+    private static void OnMDIWindowsChanged(BindableObject bindable, object oldValue, object newValue)
     {
         if (bindable is MDIContainer container)
         {
             if (oldValue is ObservableCollection<MDIWindow> oldCollection)
-                oldCollection.CollectionChanged -= container.OnWindowsCollectionChanged;
+                oldCollection.CollectionChanged -= container.OnMDIWindowsCollectionChanged;
 
             if (newValue is ObservableCollection<MDIWindow> newCollection)
             {
-                newCollection.CollectionChanged += container.OnWindowsCollectionChanged;
+                newCollection.CollectionChanged += container.OnMDIWindowsCollectionChanged;
                 container.UpdateWindows();
             }
             else
@@ -81,7 +70,7 @@ public partial class MDIContainer : ContentView
             container.SetActiveWindow(newValue as MDIWindow);
     }
 
-    private void OnWindowsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnMDIWindowsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
         {
@@ -99,9 +88,9 @@ public partial class MDIContainer : ContentView
     private void UpdateWindows()
     {
         _layout.Children.Clear();
-        if (Windows != null)
+        if (MDIWindows != null)
         {
-            foreach (var window in Windows)
+            foreach (var window in MDIWindows)
                 AddWindow(window);
         }
     }
@@ -156,9 +145,9 @@ public partial class MDIContainer : ContentView
 
     private void OnWindowClosing(object? sender, EventArgs e)
     {
-        if (sender is MDIWindow window && Windows.Contains(window))
+        if (sender is MDIWindow window && MDIWindows.Contains(window))
         {
-            Windows.Remove(window);
+            MDIWindows.Remove(window);
         }
     }
 
@@ -175,7 +164,7 @@ public partial class MDIContainer : ContentView
 
     private void OnSizeChanged(object? sender, EventArgs e)
     {
-        foreach (var window in Windows ?? Enumerable.Empty<MDIWindow>())
+        foreach (var window in MDIWindows ?? Enumerable.Empty<MDIWindow>())
         {
             window.AdjustPosition();
         }

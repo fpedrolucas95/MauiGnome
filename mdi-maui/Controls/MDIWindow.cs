@@ -228,16 +228,18 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
 
     public void AdjustPosition()
     {
-        if (ParentContainer == null) return;
+        if (ParentContainer == null || ParentContainer.MDIWindows == null) return;
 
-        double containerWidth = ParentContainer.Width;
-        double containerHeight = ParentContainer.Height;
+        foreach (var window in ParentContainer.MDIWindows)
+        {
+            window.WindowWidth = Math.Min(window.WindowWidth, ParentContainer.Width);
+            window.WindowHeight = Math.Min(window.WindowHeight, ParentContainer.Height);
 
-        X = Math.Clamp(X, 0, containerWidth - WindowWidth);
-        Y = Math.Clamp(Y, 0, containerHeight - WindowHeight);
+            window.X = Math.Clamp(window.X, 0, Math.Max(0, ParentContainer.Width - window.WindowWidth));
+            window.Y = Math.Clamp(window.Y, 0, Math.Max(0, ParentContainer.Height - window.WindowHeight));
 
-        WindowWidth = Math.Min(WindowWidth, containerWidth);
-        WindowHeight = Math.Min(WindowHeight, containerHeight);
+            AbsoluteLayout.SetLayoutBounds(window, new Rect(window.X, window.Y, window.WindowWidth, window.WindowHeight));
+        }
     }
 
     public double GetDistanceTo(MDIWindow otherWindow)
