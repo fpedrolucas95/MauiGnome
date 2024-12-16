@@ -9,7 +9,6 @@ on:
 env:
   PROJECT_FILE: mdi-maui/mdi-maui.csproj
   BUILD_CONFIGURATION: Release
-  BUILD_VERSION: 1.0.4
   DOTNET_VERSION: 8.0.x
 
 jobs:
@@ -17,65 +16,67 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    # Checkout do repositório
+    # 1. Checkout do repositório
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # Instalação do .NET SDK
+    # 2. Instalação do .NET SDK
     - name: Install .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    # Instalação do workload MAUI
+    # 3. Instalação do workload MAUI
     - name: Install .NET MAUI Workload
       run: dotnet workload install maui --ignore-failed-sources
 
-    # Gera um certificado autoassinado com OpenSSL
+    # 4. Gera um certificado autoassinado com OpenSSL
     - name: Generate Self-Signed Certificate
       shell: bash
       run: |
-        # Gera certificado autoassinado no formato correto para Git Bash
+        # Gera certificado autoassinado
         openssl req -x509 -newkey rsa:2048 -keyout SigningCertificate.key -out SigningCertificate.crt \
-          -days 365 -subj "//CN=MAUIGnome" -passout pass:temporary_password
+          -days 365 -subj "/CN=MAUIGnome" -passout pass:temporary_password
     
         # Converte para formato PFX
         openssl pkcs12 -export -out SigningCertificate.pfx -inkey SigningCertificate.key \
           -in SigningCertificate.crt -passin pass:temporary_password -passout pass:temporary_password
 
-    # Restaura dependências do projeto
+    # 5. Restaura dependências do projeto
     - name: Restore Dependencies
-      run: dotnet restore ${{ env.PROJECT_FILE }} --runtime win-x64
+      run: dotnet restore ${{ env.PROJECT_FILE }}
 
-    # Compila o projeto para Windows
-    - name: Build for Windows
+    # 6. Compila o projeto para Windows (Standalone EXE)
+    - name: Build Standalone EXE for Windows
       run: |
         dotnet publish ${{ env.PROJECT_FILE }} -c ${{ env.BUILD_CONFIGURATION }} `
           -f net8.0-windows10.0.19041.0 `
           -r win-x64 `
+          --self-contained true `
+          -p:PublishSingleFile=true `
+          -p:IncludeNativeLibrariesForSelfExtract=true `
           -p:PackageCertificateKeyFile=SigningCertificate.pfx `
           -p:PackageCertificatePassword=temporary_password `
-          --self-contained false `
           --output ./publish/windows
 
-    # Compila o projeto para Android
-    - name: Build for Android
+    # 7. Compila o projeto para Android (APK)
+    - name: Build APK for Android
       run: |
         dotnet publish ${{ env.PROJECT_FILE }} -c ${{ env.BUILD_CONFIGURATION }} `
           -f net8.0-android `
-          -p:AndroidPackageFormats=aab `
+          -p:AndroidPackageFormats=apk `
           --output ./publish/android
 
-    # Upload do artefato Windows
+    # 8. Upload do artefato Windows (EXE)
     - name: Upload Windows Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: Windows Build
-        path: ./publish/windows
+        name: Windows_Standalone_EXE
+        path: ./publish/windows/*.exe
 
-    # Upload do artefato Android
+    # 9. Upload do artefato Android (APK)
     - name: Upload Android Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: Android Build
-        path: ./publish/android
+        name: Android_APK
+        path: ./publish/android/*.apk
