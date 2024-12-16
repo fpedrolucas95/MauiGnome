@@ -79,4 +79,4 @@ Este repositório inclui algumas aplicações de exemplo demonstrando:
 
 ## 📜 Licença
 
-Este projeto está sob a licença AGPL-3.0. Consulte o arquivo [LICENSE](https://github.com/fpedrolucas95/MauiGnome/blob/master/LICENSE.md) para mais detalhes.
+Este projeto está sob a licença AGPL-3.0. Consulte o arquivo [LICENSE](https://github.com/fpedrolucas95/MauiGnome/blob/master/LICENSE) para mais detalhes.
