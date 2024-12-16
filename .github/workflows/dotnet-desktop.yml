@@ -1,62 +1,85 @@
-name: .NET MAUI CI/CD
+name: Build and Publish .NET MAUI Project
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
-  build:
-
+  build-maui:
     strategy:
+      fail-fast: false
       matrix:
-        configuration: [Debug, Release]
+        os: [windows-latest, macos-13] # Compila no Windows e macOS para diferentes plataformas
 
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
 
     env:
-      Solution_Name: mdi-maui.sln  # Nome da solução principal
+      PROJECT_FILE: mdi-maui/mdi-maui.csproj
+      BUILD_CONFIGURATION: Release
+      BUILD_VERSION: 1.0.${{ github.run_number }}
 
     steps:
-    # Checkout do repositório
+    # Checkout do código
     - name: Checkout do repositório
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
 
-    # Instala o .NET SDK 8.0.11 usando o script oficial da Microsoft
+    # Instalação do .NET SDK
     - name: Instalar .NET SDK 8.0.11
-      shell: pwsh
-      run: |
-        Invoke-WebRequest -Uri https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.ps1 -OutFile ./dotnet-install.ps1
-        ./dotnet-install.ps1 -Version 8.0.11 -InstallDir $env:DOTNET_ROOT
-      env:
-        DOTNET_ROOT: ${{ runner.temp }}/dotnet
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.11
 
-    # Adiciona o .NET SDK instalado ao PATH
-    - name: Adicionar .NET ao PATH
-      run: echo "${{ runner.temp }}/dotnet" >> $env:GITHUB_PATH
+    # Instalação da Workload MAUI
+    - name: Instalar .NET MAUI Workload
+      run: dotnet workload install maui --ignore-failed-sources
 
-    # Verificar versão do .NET SDK instalado
-    - name: Verificar versão do .NET SDK
-      run: dotnet --version
+    # Configuração do Xcode no macOS
+    - name: Configurar Xcode (macOS)
+      if: runner.os == 'macOS'
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: "14.3"
 
-    # Restaura as dependências do projeto
+    # Restaurar dependências do projeto
     - name: Restaurar dependências
-      run: dotnet restore ${{ env.Solution_Name }}
+      run: dotnet restore ${{ env.PROJECT_FILE }}
 
-    # Build do projeto
+    # Compilar o projeto
     - name: Compilar o projeto
-      run: dotnet build ${{ env.Solution_Name }} --configuration ${{ matrix.configuration }} --no-restore
+      run: dotnet build ${{ env.PROJECT_FILE }} --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
 
-    # Publica os arquivos compilados
-    - name: Publicar a aplicação
-      run: dotnet publish ${{ env.Solution_Name }} --configuration ${{ matrix.configuration }} --output ./publish
+    # Publicação do app para as plataformas relevantes
+    - name: Publicar Windows
+      if: runner.os == 'Windows'
+      run: dotnet publish ${{ env.PROJECT_FILE }} -c ${{ env.BUILD_CONFIGURATION }} -f net8.0-windows -o ./publish/windows
+
+    - name: Publicar Android
+      run: dotnet publish ${{ env.PROJECT_FILE }} -c ${{ env.BUILD_CONFIGURATION }} -f net8.0-android -o ./publish/android
+
+    - name: Publicar iOS (macOS)
+      if: runner.os == 'macOS'
+      run: dotnet publish ${{ env.PROJECT_FILE }} -c ${{ env.BUILD_CONFIGURATION }} -f net8.0-ios /p:ArchiveOnBuild=true -o ./publish/ios
 
     # Upload dos artefatos compilados
-    - name: Upload dos artefatos
+    - name: Upload Artefatos - Windows
+      if: runner.os == 'Windows'
       uses: actions/upload-artifact@v3
       with:
-        name: MauiGnome-Compilado
-        path: ./publish
+        name: MauiGnome-Windows
+        path: ./publish/windows
+
+    - name: Upload Artefatos - Android
+      uses: actions/upload-artifact@v3
+      with:
+        name: MauiGnome-Android
+        path: ./publish/android
+
+    - name: Upload Artefatos - iOS
+      if: runner.os == 'macOS'
+      uses: actions/upload-artifact@v3
+      with:
+        name: MauiGnome-iOS
+        path: ./publish/ios
