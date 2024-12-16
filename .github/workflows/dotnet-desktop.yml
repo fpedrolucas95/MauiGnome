@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-latest
 
     env:
-      Solution_Name: mdi-maui.sln
+      Solution_Name: mdi-maui.sln  # Nome da solução principal
 
     steps:
     # Checkout do repositório
@@ -25,11 +25,22 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Configura o SDK do .NET
-    - name: Configurar o SDK do .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.11
+    # Instala o .NET SDK 8.0.11 usando o script oficial da Microsoft
+    - name: Instalar .NET SDK 8.0.11
+      shell: pwsh
+      run: |
+        Invoke-WebRequest -Uri https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.ps1 -OutFile ./dotnet-install.ps1
+        ./dotnet-install.ps1 -Version 8.0.11 -InstallDir $env:DOTNET_ROOT
+      env:
+        DOTNET_ROOT: ${{ runner.temp }}/dotnet
+
+    # Adiciona o .NET SDK instalado ao PATH
+    - name: Adicionar .NET ao PATH
+      run: echo "${{ runner.temp }}/dotnet" >> $env:GITHUB_PATH
+
+    # Verificar versão do .NET SDK instalado
+    - name: Verificar versão do .NET SDK
+      run: dotnet --version
 
     # Restaura as dependências do projeto
     - name: Restaurar dependências
