@@ -1,85 +1,89 @@
-name: Build and Publish .NET MAUI Project
+name: Build MAUI App (Windows and Android)
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  workflow_dispatch:
 
 jobs:
-  build-maui:
+  build:
     strategy:
-      fail-fast: false
       matrix:
-        os: [windows-latest, macos-13] # Compila no Windows e macOS para diferentes plataformas
+        configuration: [Release]
 
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     env:
       PROJECT_FILE: mdi-maui/mdi-maui.csproj
       BUILD_CONFIGURATION: Release
-      BUILD_VERSION: 1.0.${{ github.run_number }}
+      BUILD_VERSION: 1.0.4
 
     steps:
-    # Checkout do código
-    - name: Checkout do repositório
+    # Checkout o código-fonte
+    - name: Checkout
       uses: actions/checkout@v4
 
-    # Instalação do .NET SDK
-    - name: Instalar .NET SDK 8.0.x
+    # Instala o .NET SDK e o workload MAUI
+    - name: Install .NET SDK and MAUI Workload
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
+    - run: dotnet workload install maui
 
-    # Instalação da Workload MAUI
-    - name: Instalar .NET MAUI Workload
-      run: dotnet workload install maui --ignore-failed-sources
+    # Gera um certificado autoassinado dinamicamente
+    - name: Generate Self-Signed Certificate
+      shell: powershell
+      run: |
+        $cert = New-SelfSignedCertificate -Type Custom `
+          -Subject "CN=MAUIGnome" `
+          -KeyUsage DigitalSignature `
+          -FriendlyName "MauiGnomeCertificate" `
+          -CertStoreLocation "Cert:\CurrentUser\My" `
+          -KeyExportPolicy Exportable `
+          -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" `
+          -HashAlgorithm sha256 -KeyLength 2048
 
-    # Configuração do Xcode no macOS
-    - name: Configurar Xcode (macOS)
-      if: runner.os == 'macOS'
-      uses: maxim-lobanov/setup-xcode@v1
-      with:
-        xcode-version: "14.3"
+        $pwd = ConvertTo-SecureString -String "temporary_password" -Force -AsPlainText
+        Export-PfxCertificate -Cert "Cert:\CurrentUser\My\$($cert.Thumbprint)" `
+          -FilePath "SigningCertificate.pfx" -Password $pwd
 
-    # Restaurar dependências do projeto
-    - name: Restaurar dependências
-      run: dotnet restore ${{ env.PROJECT_FILE }}
+    # Restaura dependências para Windows com RuntimeIdentifier
+    - name: Restore Dependencies for Windows
+      run: dotnet restore ${{ env.PROJECT_FILE }} --runtime win-x64
 
-    # Compilar o projeto
-    - name: Compilar o projeto
-      run: dotnet build ${{ env.PROJECT_FILE }} --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+    # Build para Windows
+    - name: Build Windows Project
+      run: |
+        dotnet publish ${{ env.PROJECT_FILE }} -c ${{ env.BUILD_CONFIGURATION }} `
+          -f net8.0-windows10.0.19041.0 `
+          -r win-x64 `
+          -p:PackageCertificateKeyFile=SigningCertificate.pfx `
+          -p:PackageCertificatePassword=temporary_password `
+          --self-contained false `
+          --output ./publish/windows
 
-    # Publicação do app para as plataformas relevantes
-    - name: Publicar Windows
-      if: runner.os == 'Windows'
-      run: dotnet publish ${{ env.PROJECT_FILE }} -c ${{ env.BUILD_CONFIGURATION }} -f net8.0-windows -o ./publish/windows
+    # Restaura dependências para Android
+    - name: Restore Dependencies for Android
+      run: dotnet restore ${{ env.PROJECT_FILE }} --runtime android
 
-    - name: Publicar Android
-      run: dotnet publish ${{ env.PROJECT_FILE }} -c ${{ env.BUILD_CONFIGURATION }} -f net8.0-android -o ./publish/android
+    # Build para Android
+    - name: Build Android Project
+      run: |
+        dotnet publish ${{ env.PROJECT_FILE }} -c ${{ env.BUILD_CONFIGURATION }} `
+          -f net8.0-android `
+          -p:AndroidPackageFormats=aab `
+          --output ./publish/android
 
-    - name: Publicar iOS (macOS)
-      if: runner.os == 'macOS'
-      run: dotnet publish ${{ env.PROJECT_FILE }} -c ${{ env.BUILD_CONFIGURATION }} -f net8.0-ios /p:ArchiveOnBuild=true -o ./publish/ios
-
-    # Upload dos artefatos compilados
-    - name: Upload Artefatos - Windows
-      if: runner.os == 'Windows'
+    # Upload de artefatos (Windows e Android)
+    - name: Upload Windows Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: MauiGnome-Windows
+        name: Windows Build
         path: ./publish/windows
 
-    - name: Upload Artefatos - Android
+    - name: Upload Android Artifact
       uses: actions/upload-artifact@v3
       with:
-        name: MauiGnome-Android
+        name: Android Build
         path: ./publish/android
-
-    - name: Upload Artefatos - iOS
-      if: runner.os == 'macOS'
-      uses: actions/upload-artifact@v3
-      with:
-        name: MauiGnome-iOS
-        path: ./publish/ios
