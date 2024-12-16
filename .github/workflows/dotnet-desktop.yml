@@ -41,7 +41,7 @@ jobs:
         # Converte para formato PFX
         openssl pkcs12 -export -out SigningCertificate.pfx -inkey SigningCertificate.key \
           -in SigningCertificate.crt -passin pass:temporary_password -passout pass:temporary_password
-      
+          
     # 5. Restaura dependências do projeto
     - name: Restore Dependencies
       run: dotnet restore ${{ env.PROJECT_FILE }}
@@ -53,8 +53,7 @@ jobs:
           -f net8.0-windows10.0.19041.0 `
           -p:WindowsPackageType=MSIX `
           -p:PackageCertificateKeyFile=SigningCertificate.pfx `
-          -p:PackageCertificatePassword=temporary_password `
-          --output ./publish/windows
+          -p:PackageCertificatePassword=temporary_password
 
     # 7. Compila o projeto para Android (APK)
     - name: Build APK for Android
@@ -69,7 +68,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: Windows_MSIX
-        path: ./publish/windows/*.msix
+        path: mdi-maui/bin/Release/net8.0-windows10.0.19041.0/win10-x64/AppPackages/**/*.msix
 
     # 9. Upload do artefato Android (APK)
     - name: Upload Android APK
