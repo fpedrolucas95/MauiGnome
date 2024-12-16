@@ -34,7 +34,7 @@
                 <Grid>
                     <Image Source="background.jpg" Aspect="Fill" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" />
                     <controls:MDIContainer x:Name="MDIContainer" 
-                                       Windows="{Binding Windows}"
+                                       MDIWindows="{Binding Windows}"
                                        ActiveWindow="{Binding ActiveWindow, Mode=TwoWay}" 
                                        HorizontalOptions="Fill" 
                                        VerticalOptions="Fill"

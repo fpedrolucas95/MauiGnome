@@ -11,3 +11,6 @@
 /mdi-maui/obj
 /mdi-maui/bin/Debug/net8.0-windows10.0.19041.0/win10-x64/AppX
 /mdi-maui/bin/Debug/net8.0-windows10.0.19041.0/win10-x64
+/mdi-maui/bin/Debug/net8.0-android
+/mdi-maui/bin/Release/net8.0-android
+/mdi-maui/bin/Release/net8.0-windows10.0.19041.0/win10-x64
