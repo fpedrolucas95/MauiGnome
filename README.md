@@ -22,7 +22,7 @@ xmlns:controls="clr-namespace:YourNamespace.Controls"
 2. **Adicione o Container MDI**:
 ```xaml
 <controls:MDIContainer 
-    Windows="{Binding Windows}"
+    MDIWindows="{Binding Windows}"
     ActiveWindow="{Binding ActiveWindow, Mode=TwoWay}" 
     HorizontalOptions="Fill" 
     VerticalOptions="Fill"/>
