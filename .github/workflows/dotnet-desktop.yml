@@ -35,10 +35,10 @@ jobs:
     - name: Generate Self-Signed Certificate
       shell: bash
       run: |
-        # Gera certificado autoassinado
+        # Gera certificado autoassinado no formato correto para Git Bash
         openssl req -x509 -newkey rsa:2048 -keyout SigningCertificate.key -out SigningCertificate.crt \
-          -days 365 -subj "/CN=MAUIGnome" -passout pass:temporary_password
-
+          -days 365 -subj "//CN=MAUIGnome" -passout pass:temporary_password
+    
         # Converte para formato PFX
         openssl pkcs12 -export -out SigningCertificate.pfx -inkey SigningCertificate.key \
           -in SigningCertificate.crt -passin pass:temporary_password -passout pass:temporary_password
