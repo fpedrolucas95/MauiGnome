@@ -1,0 +1,51 @@
+name: .NET MAUI CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    runs-on: windows-latest
+
+    env:
+      Solution_Name: mdi-maui.sln
+
+    steps:
+    # Checkout do repositório
+    - name: Checkout do repositório
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # Configura o SDK do .NET
+    - name: Configurar o SDK do .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.11
+
+    # Restaura as dependências do projeto
+    - name: Restaurar dependências
+      run: dotnet restore ${{ env.Solution_Name }}
+
+    # Build do projeto
+    - name: Compilar o projeto
+      run: dotnet build ${{ env.Solution_Name }} --configuration ${{ matrix.configuration }} --no-restore
+
+    # Publica os arquivos compilados
+    - name: Publicar a aplicação
+      run: dotnet publish ${{ env.Solution_Name }} --configuration ${{ matrix.configuration }} --output ./publish
+
+    # Upload dos artefatos compilados
+    - name: Upload dos artefatos
+      uses: actions/upload-artifact@v3
+      with:
+        name: MauiGnome-Compilado
+        path: ./publish
