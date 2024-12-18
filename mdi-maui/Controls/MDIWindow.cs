@@ -210,66 +210,108 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
 
     public void Dispose()
     {
-        _panGesture.PanUpdated -= OnPanUpdated;
-        _resizeHandle.GestureRecognizers.Clear();
+        if (_isClosing) return;
 
-        Activated = null;
-        Deactivated = null;
-        Closing = null;
-        Closed = null;
-        Content = null;
-        BindingContext = null;
+        _isClosing = true;
 
-        if (Application.Current != null)
+        try
         {
-            Application.Current.RequestedThemeChanged -= OnRequestedThemeChanged;
+            _panGesture.PanUpdated -= OnPanUpdated;
+
+            if (Resize)
+            {
+                var resizePanGesture = _resizeHandle.GestureRecognizers.OfType<PanGestureRecognizer>().FirstOrDefault();
+                if (resizePanGesture != null)
+                    resizePanGesture.PanUpdated -= OnResizePanUpdated;
+            }
+
+            _resizeHandle.GestureRecognizers.Clear();
+
+            Activated = null;
+            Deactivated = null;
+            Closing = null;
+            Closed = null;
+            Content = null;
+            BindingContext = null;
+            _contentView.Content = null;
+            _titleBar.GestureRecognizers.Clear();
+            _iconImage.Source = null;
+            _closeButtonImage.Source = null;
+            _maximizeButtonImage.Source = null;
+
+            if (Application.Current != null)
+            {
+                Application.Current.RequestedThemeChanged -= OnRequestedThemeChanged;
+            }
+
+            ParentContainer?.MDIWindows.Remove(this);
+            ParentContainer = null;
+        }
+        finally
+        {
+            _isClosing = false;
+
+            GC.SuppressFinalize(this);
         }
     }
 
     public void AdjustPosition()
     {
-        if (ParentContainer == null || ParentContainer.MDIWindows == null) return;
+        if (ParentContainer == null || ParentContainer.MDIWindows == null)
+            return;
 
         foreach (var window in ParentContainer.MDIWindows)
         {
             window.WindowWidth = Math.Min(window.WindowWidth, ParentContainer.Width);
             window.WindowHeight = Math.Min(window.WindowHeight, ParentContainer.Height);
 
-            window.X = Math.Clamp(window.X, 0, Math.Max(0, ParentContainer.Width - window.WindowWidth));
-            window.Y = Math.Clamp(window.Y, 0, Math.Max(0, ParentContainer.Height - window.WindowHeight));
+            window.X = MDIWindow.CalculateClampedPosition(window.X, window.WindowWidth, ParentContainer.Width);
+            window.Y = MDIWindow.CalculateClampedPosition(window.Y, window.WindowHeight, ParentContainer.Height);
 
             AbsoluteLayout.SetLayoutBounds(window, new Rect(window.X, window.Y, window.WindowWidth, window.WindowHeight));
         }
     }
 
+    private static double CalculateClampedPosition(double currentPosition, double windowDimension, double containerDimension)
+    {
+        return Math.Clamp(currentPosition, 0, Math.Max(0, containerDimension - windowDimension));
+    }
+
     public double GetDistanceTo(MDIWindow otherWindow)
     {
-        double dx = (X + WindowWidth / 2) - (otherWindow.X + otherWindow.WindowWidth / 2);
-        double dy = (Y + WindowHeight / 2) - (otherWindow.Y + otherWindow.WindowHeight / 2);
+        double centerX1 = X + WindowWidth / 2;
+        double centerY1 = Y + WindowHeight / 2;
+        double centerX2 = otherWindow.X + otherWindow.WindowWidth / 2;
+        double centerY2 = otherWindow.Y + otherWindow.WindowHeight / 2;
+
+        double dx = centerX1 - centerX2;
+        double dy = centerY1 - centerY2;
+
         return Math.Sqrt(dx * dx + dy * dy);
     }
 
     public void AlignTo(MDIWindow otherWindow)
     {
+        const double magnetMargin = 10.0;
+
         double leftDiff = Math.Abs(X - (otherWindow.X + otherWindow.WindowWidth));
         double rightDiff = Math.Abs((X + WindowWidth) - otherWindow.X);
         double topDiff = Math.Abs(Y - (otherWindow.Y + otherWindow.WindowHeight));
         double bottomDiff = Math.Abs((Y + WindowHeight) - otherWindow.Y);
-        double minDiff = new[] { leftDiff, rightDiff, topDiff, bottomDiff }.Min();
 
-        if (minDiff == leftDiff)
+        if (leftDiff <= magnetMargin)
         {
             X = otherWindow.X + otherWindow.WindowWidth;
         }
-        else if (minDiff == rightDiff)
+        else if (rightDiff <= magnetMargin)
         {
             X = otherWindow.X - WindowWidth;
         }
-        else if (minDiff == topDiff)
+        else if (topDiff <= magnetMargin)
         {
             Y = otherWindow.Y + otherWindow.WindowHeight;
         }
-        else if (minDiff == bottomDiff)
+        else if (bottomDiff <= magnetMargin)
         {
             Y = otherWindow.Y - WindowHeight;
         }
@@ -467,7 +509,7 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
         var separatorColor = GetColor("#09000000", "#09FFFFFF");
         var textColor = GetColor("#000000", "#FFFFFF");
 
-        _titleBar.BackgroundColor = titleBarBackgroundColor.WithAlpha(0.7f);
+        _titleBar.BackgroundColor = titleBarBackgroundColor.WithAlpha(0.9f);
         _windowBorder.BackgroundColor = Colors.Transparent;
         _windowBorder.Stroke = borderColor;
         _separator.BackgroundColor = separatorColor;
@@ -549,6 +591,14 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
                     X = _startPosition.X + e.TotalX;
                     Y = _startPosition.Y + e.TotalY;
                     AdjustPosition();
+
+                    if (ParentContainer?.MDIWindows != null)
+                    {
+                        foreach (var otherWindow in ParentContainer.MDIWindows.Where(w => w != this))
+                        {
+                            AlignTo(otherWindow);
+                        }
+                    }
                 }
                 break;
 

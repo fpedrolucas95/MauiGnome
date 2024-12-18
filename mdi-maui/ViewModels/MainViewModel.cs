@@ -41,15 +41,15 @@ public partial class MainViewModel : ObservableObject
     #endregion
 
     #region Commands
-    public IRelayCommand ToggleMenuCommand { get; }
-    public IRelayCommand OpenCalculatorCommand { get; }
-    public IRelayCommand OpenPaintCommand { get; }
-    public IRelayCommand OpenChartCommand { get; }
-    public IRelayCommand OpenAboutCommand { get; }
-    public IRelayCommand HideMenuCommand { get; }
-    public IRelayCommand CascadeCommand { get; }
-    public IRelayCommand CloseAllWindowsCommand { get; }
-    public IRelayCommand SwitchThemeCommand { get; }
+    public IRelayCommand? ToggleMenuCommand { get; private set; }
+    public IRelayCommand? OpenCalculatorCommand { get; private set; }
+    public IRelayCommand? OpenPaintCommand { get; private set; }
+    public IRelayCommand? OpenChartCommand { get; private set; }
+    public IRelayCommand? OpenAboutCommand { get; private set; }
+    public IRelayCommand? HideMenuCommand { get; private set; }
+    public IRelayCommand? CascadeCommand { get; private set; }
+    public IRelayCommand? CloseAllWindowsCommand { get; private set; }
+    public IRelayCommand? SwitchThemeCommand { get; private set; }
     #endregion
 
     #region Constructor
@@ -57,15 +57,7 @@ public partial class MainViewModel : ObservableObject
     {
         _container = container;
 
-        ToggleMenuCommand = new RelayCommand(ToggleMenu);
-        OpenCalculatorCommand = new RelayCommand(OpenCalculatorWindow);
-        OpenPaintCommand = new RelayCommand(OpenPaintWindow);
-        OpenChartCommand = new RelayCommand(OpenChartWindow);
-        OpenAboutCommand = new RelayCommand(OpenAboutWindow);
-        HideMenuCommand = new RelayCommand(HideMenu);
-        CascadeCommand = new RelayCommand(CascadeWindows);
-        CloseAllWindowsCommand = new RelayCommand(CloseAllWindows);
-        SwitchThemeCommand = new RelayCommand(ToggleTheme);
+        InitializeCommands();
 
         Windows.CollectionChanged += OnWindowsCollectionChanged;
 
@@ -79,6 +71,19 @@ public partial class MainViewModel : ObservableObject
     #endregion
 
     #region Private Methods
+    private void InitializeCommands()
+    {
+        ToggleMenuCommand = new RelayCommand(ToggleMenu);
+        OpenCalculatorCommand = new RelayCommand(OpenCalculatorWindow);
+        OpenPaintCommand = new RelayCommand(OpenPaintWindow);
+        OpenChartCommand = new RelayCommand(OpenChartWindow);
+        OpenAboutCommand = new RelayCommand(OpenAboutWindow);
+        HideMenuCommand = new RelayCommand(HideMenu);
+        CascadeCommand = new RelayCommand(CascadeWindows);
+        CloseAllWindowsCommand = new RelayCommand(CloseAllWindows);
+        SwitchThemeCommand = new RelayCommand(ToggleTheme);
+    }
+
     private void OnWindowsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         ActiveWindow = e.Action == NotifyCollectionChangedAction.Remove && e.OldItems != null ? Windows.LastOrDefault() : ActiveWindow;

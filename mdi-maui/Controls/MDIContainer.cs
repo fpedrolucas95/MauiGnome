@@ -15,7 +15,6 @@ public partial class MDIContainer : ContentView
         set => SetValue(MDIWindowsProperty, value);
     }
 
-
     public static readonly BindableProperty ActiveWindowProperty = BindableProperty.Create(nameof(ActiveWindow), typeof(MDIWindow), typeof(MDIContainer), null, propertyChanged: OnActiveWindowChanged, defaultBindingMode: BindingMode.TwoWay);
     public MDIWindow? ActiveWindow
     {
@@ -26,7 +25,7 @@ public partial class MDIContainer : ContentView
 
     #region Fields
     private readonly AbsoluteLayout _layout;
-    private double _windowOffset;
+    private readonly WindowPositionManager _positionManager;
     private int _zIndex;
     #endregion
 
@@ -39,6 +38,8 @@ public partial class MDIContainer : ContentView
             HorizontalOptions = LayoutOptions.Fill,
             VerticalOptions = LayoutOptions.Fill
         };
+
+        _positionManager = new WindowPositionManager();
         Content = _layout;
         SizeChanged += OnSizeChanged;
     }
@@ -97,12 +98,9 @@ public partial class MDIContainer : ContentView
 
     private void AddWindow(MDIWindow window)
     {
-        window.Activated += OnWindowActivated;
-        window.Closing += OnWindowClosing;
-        window.PropertyChanged += OnWindowPropertyChanged;
-
+        ManageWindowEvents(window, true);
         window.ParentContainer = this;
-        PositionWindow(window);
+        _positionManager.PositionWindow(window);
 
         AbsoluteLayout.SetLayoutFlags(window, AbsoluteLayoutFlags.None);
         AbsoluteLayout.SetLayoutBounds(window, new Rect(window.X, window.Y, window.WindowWidth, window.WindowHeight));
@@ -113,10 +111,7 @@ public partial class MDIContainer : ContentView
 
     private void RemoveWindow(MDIWindow window)
     {
-        window.Activated -= OnWindowActivated;
-        window.Closing -= OnWindowClosing;
-        window.PropertyChanged -= OnWindowPropertyChanged;
-
+        ManageWindowEvents(window, false);
         _layout.Children.Remove(window);
 
         if (ActiveWindow == window)
@@ -125,16 +120,20 @@ public partial class MDIContainer : ContentView
         window.Dispose();
     }
 
-    private void PositionWindow(MDIWindow window)
+    private void ManageWindowEvents(MDIWindow window, bool addEvents)
     {
-        const double initialOffset = 20;
-
-        window.X = initialOffset + _windowOffset;
-        window.Y = initialOffset + _windowOffset;
-
-        _windowOffset = (_windowOffset + 20) % 100;
-
-        window.AdjustPosition();
+        if (addEvents)
+        {
+            window.Activated += OnWindowActivated;
+            window.Closing += OnWindowClosing;
+            window.PropertyChanged += OnWindowPropertyChanged;
+        }
+        else
+        {
+            window.Activated -= OnWindowActivated;
+            window.Closing -= OnWindowClosing;
+            window.PropertyChanged -= OnWindowPropertyChanged;
+        }
     }
 
     private void OnWindowActivated(object? sender, EventArgs e)
@@ -164,24 +163,26 @@ public partial class MDIContainer : ContentView
 
     private void OnSizeChanged(object? sender, EventArgs e)
     {
-        foreach (var window in MDIWindows ?? Enumerable.Empty<MDIWindow>())
+        Task.Run(() =>
         {
-            window.AdjustPosition();
-        }
+            foreach (var window in MDIWindows ?? Enumerable.Empty<MDIWindow>())
+            {
+                window.AdjustPosition();
+            }
+        });
     }
 
     public void SetActiveWindow(MDIWindow? window)
     {
-        if (ActiveWindow != window)
-        {
-            ActiveWindow?.Deactivate();
-            ActiveWindow = window;
-            ActiveWindow?.Activate();
+        if (ActiveWindow == window) return;
 
-            if (window != null)
-            {
-                window.ZIndex = ++_zIndex;
-            }
+        ActiveWindow?.Deactivate();
+        ActiveWindow = window;
+        ActiveWindow?.Activate();
+
+        if (window != null)
+        {
+            window.ZIndex = ++_zIndex;
         }
     }
 
@@ -206,4 +207,19 @@ public partial class MDIContainer : ContentView
         closestWindow?.AlignTo(window);
     }
     #endregion
+}
+
+public class WindowPositionManager
+{
+    private double _offset;
+    private const double MaxOffset = 100;
+
+    public void PositionWindow(MDIWindow window)
+    {
+        const double initialOffset = 20;
+        window.X = initialOffset + _offset;
+        window.Y = initialOffset + _offset;
+        _offset = (_offset + 20) % MaxOffset;
+        window.AdjustPosition();
+    }
 }

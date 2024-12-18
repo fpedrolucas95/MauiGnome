@@ -6,7 +6,7 @@
              BackgroundColor="{AppThemeBinding Light={StaticResource WindowBackgroundLight}, Dark={StaticResource WindowBackgroundDark}}">
     <Grid RowDefinitions="24, *, 24" ColumnDefinitions="60, 2*">
         <!-- Toolbar -->
-        <StackLayout Orientation="Horizontal" Grid.Row="0" Grid.ColumnSpan="2" Spacing="8">
+        <HorizontalStackLayout Grid.Row="0" Grid.ColumnSpan="2" Spacing="8">
             <Border Style="{StaticResource ButtonStyle}" Margin="8,0,0,0">
                 <Label Text="Salvar" FontSize="12">
                     <Label.GestureRecognizers>
@@ -21,7 +21,7 @@
                     </Label.GestureRecognizers>
                 </Label>
             </Border>
-        </StackLayout>
+        </HorizontalStackLayout>
 
         <!-- Drawing Area -->
         <StackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
