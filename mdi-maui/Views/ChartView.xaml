@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:mdi_maui.Controls"
              x:Class="mdi_maui.Views.ChartView"
-             BackgroundColor="{AppThemeBinding Light={StaticResource BorderColorLight}, Dark={StaticResource BackgroundDark}}">
+             BackgroundColor="{AppThemeBinding Light={StaticResource WindowBackgroundLight}, Dark={StaticResource WindowBackgroundDark}}">
 
     <Grid>
         <Grid.RowDefinitions>

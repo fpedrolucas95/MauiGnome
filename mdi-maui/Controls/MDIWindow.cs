@@ -315,6 +315,11 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
 
         var resizePanGesture = new PanGestureRecognizer();
         resizePanGesture.PanUpdated += OnResizePanUpdated;
+        var globalTapGesture = new TapGestureRecognizer();
+        globalTapGesture.Tapped += (sender, e) => Activate();
+
+        _windowBorder.GestureRecognizers.Add(globalTapGesture);
+        _contentView.GestureRecognizers.Add(globalTapGesture);
 
         if (Resize)
         {
@@ -456,14 +461,14 @@ public partial class MDIWindow : ContentView, IDisposable, INotifyPropertyChange
     private void UpdateTheme()
     {
         var currentTheme = Application.Current?.RequestedTheme ?? AppTheme.Light;
-        var titleBarBackgroundColor = GetColor("#E4E4D5", "#22201f90");
+        var titleBarBackgroundColor = GetColor("#E4E4D5", "#22201f");
         var windowBackgroundColor = GetColor("#FFFFFF", "#1a1a1a");
         var borderColor = GetColor("#20000000", "#20FFFFFF");
         var separatorColor = GetColor("#09000000", "#09FFFFFF");
         var textColor = GetColor("#000000", "#FFFFFF");
 
-        _titleBar.BackgroundColor = titleBarBackgroundColor;
-        _windowBorder.BackgroundColor = windowBackgroundColor;
+        _titleBar.BackgroundColor = titleBarBackgroundColor.WithAlpha(0.7f);
+        _windowBorder.BackgroundColor = Colors.Transparent;
         _windowBorder.Stroke = borderColor;
         _separator.BackgroundColor = separatorColor;
         _titleLabel.TextColor = textColor;
