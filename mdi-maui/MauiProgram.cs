@@ -40,5 +40,7 @@ public static class MauiProgram
         builder.Services.AddTransient<PaintView>();
         builder.Services.AddTransient<ChartViewModel>();
         builder.Services.AddTransient<ChartView>();
+        builder.Services.AddTransient<ChatbotViewModel>();
+        builder.Services.AddTransient<ChatbotView>();
     }
 }

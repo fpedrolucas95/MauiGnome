@@ -45,6 +45,7 @@ public partial class MainViewModel : ObservableObject
     public IRelayCommand? OpenCalculatorCommand { get; private set; }
     public IRelayCommand? OpenPaintCommand { get; private set; }
     public IRelayCommand? OpenChartCommand { get; private set; }
+    public IRelayCommand? OpenChatbotCommand { get; private set; }
     public IRelayCommand? OpenAboutCommand { get; private set; }
     public IRelayCommand? HideMenuCommand { get; private set; }
     public IRelayCommand? CascadeCommand { get; private set; }
@@ -77,6 +78,7 @@ public partial class MainViewModel : ObservableObject
         OpenCalculatorCommand = new RelayCommand(OpenCalculatorWindow);
         OpenPaintCommand = new RelayCommand(OpenPaintWindow);
         OpenChartCommand = new RelayCommand(OpenChartWindow);
+        OpenChatbotCommand = new RelayCommand(OpenChatbotWindow);
         OpenAboutCommand = new RelayCommand(OpenAboutWindow);
         HideMenuCommand = new RelayCommand(HideMenu);
         CascadeCommand = new RelayCommand(CascadeWindows);
@@ -127,6 +129,16 @@ public partial class MainViewModel : ObservableObject
         HideMenu();
         var chartView = new ChartView();
         var mdiWindow = CreateMDIWindow("Chart", chartView, 480, 380, GetIcon("chart"));
+        mdiWindow.Closed += (_, _) => Windows.Remove(mdiWindow);
+        Windows.Add(mdiWindow);
+        ActiveWindow = mdiWindow;
+    }
+
+    private void OpenChatbotWindow()
+    {
+        HideMenu();
+        var chatbotView = new ChatbotView();
+        var mdiWindow = CreateMDIWindow("Chatbot", chatbotView, 320, 512, GetIcon("chatbot"), false);
         mdiWindow.Closed += (_, _) => Windows.Remove(mdiWindow);
         Windows.Add(mdiWindow);
         ActiveWindow = mdiWindow;
@@ -205,6 +217,7 @@ public partial class MainViewModel : ObservableObject
                 "sobre" => "about",
                 "paint" => "paint",
                 "chart" => "chart",
+                "chatbot" => "chatbot",
                 _ => "default"
             });
         }

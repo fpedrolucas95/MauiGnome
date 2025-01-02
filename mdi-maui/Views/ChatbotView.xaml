@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="mdi_maui.Views.ChatbotView"
+             xmlns:models="clr-namespace:mdi_maui.Models"
+             xmlns:converters="clr-namespace:mdi_maui.Converters"
+             BackgroundColor="{AppThemeBinding Light={StaticResource WindowBackgroundLight}, Dark={StaticResource WindowBackgroundDark}}">
+
+	<!-- Converters como recursos -->
+	<ContentView.Resources>
+		<ResourceDictionary>
+			<converters:MessageAlignmentConverter x:Key="MessageAlignmentConverter" />
+			<converters:MessageBubbleColorConverter x:Key="MessageBubbleColorConverter" />
+			<converters:MessageTextColorConverter x:Key="MessageTextColorConverter" />
+		</ResourceDictionary>
+	</ContentView.Resources>
+
+	<Grid RowDefinitions="*,Auto,Auto" Padding="10">
+		<Grid Grid.Row="0">
+			<CollectionView x:Name="MessagesCollection"
+                            ItemsSource="{Binding Messages}"
+                            SelectionMode="None"
+                            ItemsUpdatingScrollMode="KeepLastItemInView"
+                            VerticalScrollBarVisibility="Never">
+				<CollectionView.ItemsLayout>
+					<LinearItemsLayout Orientation="Vertical" />
+				</CollectionView.ItemsLayout>
+
+				<CollectionView.ItemTemplate>
+					<DataTemplate x:DataType="models:ChatMessage">
+						<StackLayout HorizontalOptions="FillAndExpand" VerticalOptions="Start">
+							<Border HorizontalOptions="{Binding IsUserMessage, Converter={StaticResource MessageAlignmentConverter}}"
+                                    BackgroundColor="{Binding IsUserMessage, Converter={StaticResource MessageBubbleColorConverter}}"
+                                    StrokeShape="RoundRectangle 16"
+                                    Padding="10"
+                                    Margin="5">
+
+								<StackLayout Spacing="2">
+									<Label Text="{Binding Content}"
+                                           FontSize="13"
+                                           LineBreakMode="WordWrap"
+                                           TextColor="{Binding IsUserMessage, Converter={StaticResource MessageTextColorConverter}}"/>
+
+									<Label Text="{Binding Timestamp, StringFormat='{0:HH:mm}'}"
+                                           FontSize="10"
+                                           HorizontalOptions="End"
+                                           TextColor="{DynamicResource SecondaryTextColor}"/>
+								</StackLayout>
+							</Border>
+						</StackLayout>
+					</DataTemplate>
+				</CollectionView.ItemTemplate>
+			</CollectionView>
+
+			<StackLayout VerticalOptions="Center"
+                         HorizontalOptions="Center"
+                         Spacing="10"
+                         IsVisible="{Binding IsEmpty}">
+				<Image Source="dotnet_bot.png"
+                       WidthRequest="150"
+                       HeightRequest="80"/>
+				<Label Text="Bem-vindo ao dotnetGPT!"
+                       FontSize="20"
+                       HorizontalOptions="Center"/>
+				<Label Text="Pergunte qualquer coisa. Estou aqui para ajudar."
+                       FontSize="13"
+                       HorizontalOptions="Center"/>
+			</StackLayout>
+		</Grid>
+
+		<Grid Grid.Row="1"
+              ColumnDefinitions="*,Auto"
+              ColumnSpacing="8">
+
+			<Entry Grid.Column="0"
+                   Placeholder="Digite uma mensagem..."
+                   Text="{Binding InputMessage}"
+                   Margin="0,0,0,0"/>
+
+			<Button Grid.Column="1"
+                    Text="Enviar"
+                    Command="{Binding SendMessageCommand}"
+                    VerticalOptions="Center"/>
+		</Grid>
+
+		<Label Grid.Row="2"
+               Text="O dotnetGPT pode cometer erros. Verifique informações importantes."
+               FontSize="8"
+               HorizontalOptions="Center"
+               Padding="0,5,0,0"/>
+	</Grid>
+</ContentView>

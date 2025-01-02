@@ -82,6 +82,11 @@
                         <TapGestureRecognizer Command="{Binding OpenChartCommand}" />
                     </Label.GestureRecognizers>
                 </Label>
+                <Label Text="Chatbot" Padding="8">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding OpenChatbotCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
                 <Label Text="Sobre" Padding="8">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding OpenAboutCommand}" />

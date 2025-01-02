@@ -82,11 +82,13 @@
 
 	<ItemGroup>
 	  <None Remove="Resources\Images\icons\dark_chart.svg" />
+	  <None Remove="Resources\Images\icons\dark_chatbot.svg" />
 	  <None Remove="Resources\Images\icons\dark_github.svg" />
 	  <None Remove="Resources\Images\icons\dark_maximize.svg" />
 	  <None Remove="Resources\Images\icons\dark_paint.svg" />
 	  <None Remove="Resources\Images\icons\dark_restore.svg" />
 	  <None Remove="Resources\Images\icons\light_chart.svg" />
+	  <None Remove="Resources\Images\icons\light_chatbot.svg" />
 	  <None Remove="Resources\Images\icons\light_github.svg" />
 	  <None Remove="Resources\Images\icons\light_maximize.svg" />
 	  <None Remove="Resources\Images\icons\light_paint.svg" />
@@ -97,6 +99,7 @@
 	  <MauiImage Include="Resources\Images\icons\dark_about.svg" BaseSize="150,150" />
 	  <MauiImage Include="Resources\Images\icons\dark_calculator.svg" BaseSize="150,150" />
 	  <MauiImage Include="Resources\Images\icons\dark_chart.svg" />
+	  <MauiImage Include="Resources\Images\icons\dark_chatbot.svg" />
 	  <MauiImage Include="Resources\Images\icons\dark_close.svg" BaseSize="150,150" />
 	  <MauiImage Include="Resources\Images\icons\dark_github.svg" BaseSize="150,150" />
 	  <MauiImage Include="Resources\Images\icons\dark_maximize.svg" />
@@ -106,6 +109,7 @@
 	  <MauiImage Include="Resources\Images\icons\light_about.svg" BaseSize="150,150" />
 	  <MauiImage Include="Resources\Images\icons\light_calculator.svg" BaseSize="150,150" />
 	  <MauiImage Include="Resources\Images\icons\light_chart.svg" />
+	  <MauiImage Include="Resources\Images\icons\light_chatbot.svg" />
 	  <MauiImage Include="Resources\Images\icons\light_close.svg" BaseSize="150,150" />
 	  <MauiImage Include="Resources\Images\icons\light_github.svg" BaseSize="150,150" />
 	  <MauiImage Include="Resources\Images\icons\light_maximize.svg" />
@@ -131,6 +135,9 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\ChartView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\ChatbotView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\PaintView.xaml">
