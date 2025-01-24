@@ -6,10 +6,14 @@ using System.Collections.ObjectModel;
 
 namespace mdi_maui.ViewModels;
 
-internal partial class ChatbotViewModel : ObservableObject
+public partial class ChatbotViewModel : ObservableObject
 {
+    #region Fields
     private readonly OpenAIService _openAIService;
     private readonly List<ChatMessage> _conversationContext;
+    #endregion
+
+    #region Properties
 
     [ObservableProperty]
     private string inputMessage = string.Empty;
@@ -19,19 +23,26 @@ internal partial class ChatbotViewModel : ObservableObject
 
     public bool IsEmpty => Messages.Count == 0;
 
+    #endregion
+
+    #region Constructor
+
     public ChatbotViewModel()
     {
         _openAIService = new OpenAIService();
         _conversationContext = new List<ChatMessage>();
 
-        Messages.CollectionChanged += (s, e) => OnPropertyChanged(nameof(IsEmpty));
+        Messages.CollectionChanged += (_, __) => OnPropertyChanged(nameof(IsEmpty));
     }
+
+    #endregion
+
+    #region Commands
 
     [RelayCommand]
     private async Task SendMessageAsync()
     {
-        if (string.IsNullOrWhiteSpace(InputMessage))
-            return;
+        if (string.IsNullOrWhiteSpace(InputMessage)) return;
 
         var userMessage = new ChatMessage
         {
@@ -71,4 +82,6 @@ internal partial class ChatbotViewModel : ObservableObject
 
         InputMessage = string.Empty;
     }
+
+    #endregion
 }

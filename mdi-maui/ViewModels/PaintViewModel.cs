@@ -6,20 +6,28 @@ namespace mdi_maui.ViewModels;
 
 public partial class PaintViewModel : INotifyPropertyChanged
 {
+    #region Fields
     private string _toolType;
     private Color _toolColor;
     private int _toolWidth;
+    #endregion
 
+    #region Events
     public event PropertyChangedEventHandler? PropertyChanged;
+    #endregion
 
+    #region Constructor
     public PaintViewModel()
     {
         _toolType = string.Empty;
         _toolColor = Colors.Black;
         _toolWidth = 5;
+
         ChangeColorCommand = new RelayCommand<string>(ChangeColor);
     }
+    #endregion
 
+    #region Properties
     public string ToolType
     {
         get => _toolType;
@@ -37,9 +45,13 @@ public partial class PaintViewModel : INotifyPropertyChanged
         get => _toolWidth;
         set => SetProperty(ref _toolWidth, value, nameof(ToolWidth));
     }
+    #endregion
 
+    #region Commands
     public ICommand ChangeColorCommand { get; }
+    #endregion
 
+    #region Private Methods
     private void ChangeColor(string? colorName)
     {
         if (string.IsNullOrWhiteSpace(colorName)) return;
@@ -60,11 +72,6 @@ public partial class PaintViewModel : INotifyPropertyChanged
         }
     }
 
-    protected virtual void OnPropertyChanged(string propertyName)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
     private bool SetProperty<T>(ref T backingField, T value, string propertyName)
     {
         if (EqualityComparer<T>.Default.Equals(backingField, value)) return false;
@@ -72,4 +79,12 @@ public partial class PaintViewModel : INotifyPropertyChanged
         OnPropertyChanged(propertyName);
         return true;
     }
+    #endregion
+
+    #region Protected Methods
+    protected virtual void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+    #endregion
 }

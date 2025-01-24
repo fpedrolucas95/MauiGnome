@@ -1,4 +1,4 @@
-﻿using mdi_maui.Controls;
+﻿using mdi_maui.Models;
 using System.Collections.ObjectModel;
 using System.Timers;
 using System.Windows.Input;
@@ -7,42 +7,93 @@ namespace mdi_maui.ViewModels;
 
 public partial class ChartViewModel : BindableObject, IDisposable
 {
-    public ObservableCollection<CandlestickData> CandlestickSeries { get; private set; }
-
+    #region Fields
     private readonly System.Timers.Timer _timer;
     private readonly Random _randomGenerator;
     private double _lastClosePrice;
     private DateTime _lastCandleTime;
-    private CandlestickData? _currentCandle;
-
-    public ICommand ChangeIntervalCommand { get; }
-
+    private ChartData? _currentCandle;
     private int _intervalInSeconds = 60;
+    private const int MaxStoredCandles = 1000;
+    #endregion
 
+    #region Properties
+
+    public ObservableCollection<ChartData> CandlestickSeries { get; }
+
+    private string _chartType;
+    public string ChartType
+    {
+        get => _chartType;
+        set
+        {
+            if (_chartType == value) return;
+            _chartType = value;
+            OnPropertyChanged();
+        }
+    }
+
+    #endregion
+
+    #region Commands
+    public ICommand ChangeIntervalCommand { get; }
+    public ICommand ToggleChartTypeCommand { get; }
+    #endregion
+
+    #region Constructor
     public ChartViewModel()
     {
-        CandlestickSeries = [];
+        CandlestickSeries = new ObservableCollection<ChartData>();
         _randomGenerator = new Random();
         _lastClosePrice = 100;
         _lastCandleTime = DateTime.Now;
 
-        _timer = new System.Timers.Timer(1000);
+        _timer = new System.Timers.Timer(8);
         _timer.Elapsed += UpdateCurrentCandle;
         _timer.AutoReset = true;
 
         ChangeIntervalCommand = new Command<string>(ChangeInterval);
+        ToggleChartTypeCommand = new Command(ToggleChartType);
+
+        // Define o icone inicial como candle, conforme modo claro/escuro
+        ChartType = IsDarkMode() ? "dark_candle.png" : "light_candle.png";
 
         GenerateInitialCandlesticks();
     }
+    #endregion
 
-    public void StartRealTimeCandlestickGeneration()
-    {
-        _timer.Start();
-    }
+    #region Public Methods
+    public void StartRealTimeCandlestickGeneration() => _timer.Start();
+    public void StopRealTimeCandlestickGeneration() => _timer.Stop();
 
-    public void StopRealTimeCandlestickGeneration()
+    public void Dispose()
     {
         _timer.Stop();
+        _timer.Elapsed -= UpdateCurrentCandle;
+        _timer.Dispose();
+        GC.SuppressFinalize(this);
+    }
+    #endregion
+
+    #region Private Methods
+
+    private bool IsDarkMode()
+    {
+        if (Application.Current?.RequestedTheme == AppTheme.Dark) return true;
+        return false;
+    }
+
+    private void ToggleChartType()
+    {
+        // Se estiver usando candle => muda pra line; se estiver em line => volta pra candle
+        if (ChartType.Contains("candle", StringComparison.OrdinalIgnoreCase))
+        {
+            ChartType = IsDarkMode() ? "dark_line.png" : "light_line.png";
+        }
+        else
+        {
+            ChartType = IsDarkMode() ? "dark_candle.png" : "light_candle.png";
+        }
     }
 
     private void UpdateCurrentCandle(object? sender, ElapsedEventArgs e)
@@ -65,7 +116,8 @@ public partial class ChartViewModel : BindableObject, IDisposable
             Application.Current?.Dispatcher.Dispatch(() =>
             {
                 CandlestickSeries.Add(finalizedCandle);
-                if (CandlestickSeries.Count > 50)
+
+                if (CandlestickSeries.Count > MaxStoredCandles)
                 {
                     CandlestickSeries.RemoveAt(0);
                 }
@@ -76,9 +128,9 @@ public partial class ChartViewModel : BindableObject, IDisposable
         }
     }
 
-    private CandlestickData CreateNewCandlestickTemplate()
+    private ChartData CreateNewCandlestickTemplate()
     {
-        return new CandlestickData
+        return new ChartData
         {
             Open = _lastClosePrice,
             High = _lastClosePrice,
@@ -104,10 +156,11 @@ public partial class ChartViewModel : BindableObject, IDisposable
 
     private void GenerateInitialCandlesticks()
     {
-        DateTime startTime = DateTime.Now.AddSeconds(-50 * _intervalInSeconds);
+        const int initialCount = 200;
+        DateTime startTime = DateTime.Now.AddSeconds(-initialCount * _intervalInSeconds);
         _lastCandleTime = startTime;
 
-        for (int i = 0; i < 50; i++)
+        for (int i = 0; i < initialCount; i++)
         {
             var candle = GenerateNewCandlestick();
             CandlestickSeries.Add(candle);
@@ -116,14 +169,14 @@ public partial class ChartViewModel : BindableObject, IDisposable
         }
     }
 
-    private CandlestickData GenerateNewCandlestick()
+    private ChartData GenerateNewCandlestick()
     {
         double open = _lastClosePrice;
         double high = open + _randomGenerator.NextDouble() * 10;
         double low = open - _randomGenerator.NextDouble() * 10;
         double close = low + _randomGenerator.NextDouble() * (high - low);
 
-        return new CandlestickData
+        return new ChartData
         {
             Open = open,
             High = high,
@@ -133,11 +186,5 @@ public partial class ChartViewModel : BindableObject, IDisposable
         };
     }
 
-    public void Dispose()
-    {
-        _timer.Stop();
-        _timer.Elapsed -= UpdateCurrentCandle;
-        _timer.Dispose();
-        GC.SuppressFinalize(this);
-    }
+    #endregion
 }

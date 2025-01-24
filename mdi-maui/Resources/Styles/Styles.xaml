@@ -41,8 +41,12 @@
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}" />
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
         <Setter Property="CornerRadius" Value="8"/>
-        <Setter Property="Padding" Value="14,10"/>
         <!-- Additional setters as needed -->
+    </Style>
+
+    <Style x:Key="InterfaceButton" TargetType="Button">
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="TextColor" Value="White"/>
     </Style>
 
     <!-- Style for ContentPage -->
@@ -50,23 +54,33 @@
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}" />
     </Style>
 
+    <Style x:Key="CustomSearchBarStyle" TargetType="SearchBar">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="HeightRequest" Value="32" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+    </Style>
+
     <!-- Estilos específicos da Calculadora -->
     <Style x:Key="CalcNumberButtonStyle" TargetType="Button">
         <Setter Property="FontSize" Value="18"/>
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CalcNumberButtonLight}, Dark={StaticResource CalcNumberButtonDark}}"/>
         <Setter Property="TextColor" Value="White"/>
+        <Setter Property="Padding" Value="14,10"/>
     </Style>
 
     <Style x:Key="CalcOperatorButtonStyle" TargetType="Button">
         <Setter Property="FontSize" Value="18"/>
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource CalcOperatorButtonLight}, Dark={StaticResource CalcOperatorButtonDark}}"/>
         <Setter Property="TextColor" Value="White"/>
+        <Setter Property="Padding" Value="14,10"/>
     </Style>
 
     <Style x:Key="CalcSpecialButtonStyle" TargetType="Button">
         <Setter Property="FontSize" Value="18"/>
         <Setter Property="BackgroundColor" Value="{StaticResource CalcSpecialButtonColor}"/>
         <Setter Property="TextColor" Value="{AppThemeBinding Light=White, Dark=Black}"/>
+        <Setter Property="Padding" Value="14,10"/>
     </Style>
 
     <Style TargetType="ActivityIndicator">

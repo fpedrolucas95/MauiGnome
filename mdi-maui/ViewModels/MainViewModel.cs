@@ -128,7 +128,7 @@ public partial class MainViewModel : ObservableObject
     {
         HideMenu();
         var chartView = new ChartView();
-        var mdiWindow = CreateMDIWindow("Chart", chartView, 480, 380, GetIcon("chart"));
+        var mdiWindow = CreateMDIWindow("Gráfico", chartView, 720, 480, GetIcon("chart"));
         mdiWindow.Closed += (_, _) => Windows.Remove(mdiWindow);
         Windows.Add(mdiWindow);
         ActiveWindow = mdiWindow;

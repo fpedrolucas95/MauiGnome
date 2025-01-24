@@ -1,24 +1,48 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:controls="clr-namespace:mdi_maui.Controls"
+             xmlns:controls="clr-namespace:mdi_maui.Controls.Chart"
              x:Class="mdi_maui.Views.ChartView"
              BackgroundColor="{AppThemeBinding Light={StaticResource WindowBackgroundLight}, Dark={StaticResource WindowBackgroundDark}}">
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="28" />
-        </Grid.RowDefinitions>
+    <Grid RowDefinitions="*,28">
+        <controls:ChartComponent x:Name="CandleChart"
+                                 Grid.Row="0"
+                                 DataSeries="{Binding CandlestickSeries}"
+                                 BackgroundColor="{AppThemeBinding Light={StaticResource BorderColorLight}, Dark={StaticResource OffBlack}}"
+                                 VerticalOptions="Fill"
+                                 HorizontalOptions="Fill"/>
+        <Button x:Name="ChartTypeButton"
+                HeightRequest="45" WidthRequest="45" 
+                Text="C"
+                BackgroundColor="{AppThemeBinding Light={StaticResource WindowBackgroundLight}, Dark={StaticResource WindowBackgroundDark}}"
+                HorizontalOptions="Start" 
+                VerticalOptions="End" 
+                Margin="16,154"
+                Clicked="OnToggleChartTypeClicked"
+                ToolTipProperties.Text="Tipo de gráfico"
+                Opacity="0.95"/>
+        <Button HeightRequest="45" WidthRequest="45" 
+                Text="+"
+                BackgroundColor="{AppThemeBinding Light={StaticResource WindowBackgroundLight}, Dark={StaticResource WindowBackgroundDark}}"
+                HorizontalOptions="Start" 
+                VerticalOptions="End" 
+                Margin="16,96"
+                Clicked="OnZoomInClicked"
+                ToolTipProperties.Text="Zoom In"
+                Opacity="0.95"/>
+        <Button HeightRequest="45" WidthRequest="45" 
+                Text="-"
+                BackgroundColor="{AppThemeBinding Light={StaticResource WindowBackgroundLight}, Dark={StaticResource WindowBackgroundDark}}"
+                HorizontalOptions="Start" 
+                VerticalOptions="End" 
+                Margin="16,38"
+                Clicked="OnZoomOutClicked"
+                ToolTipProperties.Text="Zoom Out"
+                Opacity="0.95"/>
 
-        <controls:CandlestickChartView x:Name="CandleChart"
-                                       Grid.Row="0"
-                                       CandlestickSeries="{Binding CandlestickSeries}"
-                                       VerticalOptions="Fill"
-                                       HorizontalOptions="Fill" />
-
-        <HorizontalStackLayout Grid.Row="1" Padding="5">
-            <Border Style="{StaticResource ButtonStyle}" Margin="8,-2,0,0">
+        <HorizontalStackLayout Grid.Row="1" Padding="5" Spacing="8">
+            <Border Style="{StaticResource ButtonStyle}" Margin="16,-2,0,0">
                 <Label Text="2 Min" FontSize="12">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding ChangeIntervalCommand}" CommandParameter="120"/>
