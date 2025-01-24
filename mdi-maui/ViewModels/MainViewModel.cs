@@ -216,7 +216,7 @@ public partial class MainViewModel : ObservableObject
                 "calculadora" => "calculator",
                 "sobre" => "about",
                 "paint" => "paint",
-                "chart" => "chart",
+                "gráfico" => "chart",
                 "chatbot" => "chatbot",
                 _ => "default"
             });
