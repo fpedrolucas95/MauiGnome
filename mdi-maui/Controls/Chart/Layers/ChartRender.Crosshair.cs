@@ -11,19 +11,25 @@ public class CrosshairLayer : IChartLayer
     #region Public Methods
     public void DrawLayer(ICanvas canvas, RectF dirtyRect, RectF chartArea, ChartRenderContext context)
     {
-        if (!context.ShowPointer) return;
+        if (!context.ShowPointer)
+            return;
+
+        var priceArea = context.ShowVolume ? context.PriceArea : chartArea;
+
         if (context.PointerX < chartArea.Left || context.PointerX > chartArea.Right) return;
-        if (context.PointerY < chartArea.Top || context.PointerY > chartArea.Bottom) return;
+
+        if (context.PointerY < priceArea.Top || context.PointerY > priceArea.Bottom) return;
 
         canvas.SaveState();
-        canvas.StrokeDashPattern = [3, 3];
+        canvas.StrokeDashPattern = new float[] { 3, 3 };
         canvas.StrokeColor = Colors.White.WithAlpha(0.7f);
         canvas.StrokeSize = 1;
         canvas.DrawLine(context.PointerX, chartArea.Top, context.PointerX, chartArea.Bottom);
-        canvas.DrawLine(chartArea.Left, context.PointerY, chartArea.Right, context.PointerY);
+
+        canvas.DrawLine(priceArea.Left, context.PointerY, priceArea.Right, context.PointerY);
         canvas.RestoreState();
 
-        double priceValue = TranslateYToPrice(context.PointerY, chartArea, context.MinPrice, context.MaxPrice);
+        double priceValue = TranslateYToPrice(context.PointerY, priceArea, context.MinPrice, context.MaxPrice);
         string priceTxt = priceValue.ToString("F2");
 
         canvas.FontSize = _fontSize;
@@ -32,8 +38,8 @@ public class CrosshairLayer : IChartLayer
         float labelW = (float)(priceTxt.Length * _fontSize * 0.6);
         float labelH = _fontSize * 1.4f;
 
-        float boxLeft = chartArea.Right;
-        float boxTop = context.PointerY - labelH / 2;
+        float boxLeft = priceArea.Right;
+        float boxTop = context.PointerY - (labelH / 2);
         float boxWidth = labelW + 10;
         float boxHeight = labelH;
 
@@ -52,9 +58,12 @@ public class CrosshairLayer : IChartLayer
         float textY = boxTop;
         DrawStringLeft(canvas, priceTxt, textX, textY, labelW, labelH);
 
-        if (context.VisibleData == null || !context.VisibleData.Any()) return;
-        int idx = GetNearestIndex(context.PointerX, chartArea, context.VisibleData.Count, context);
-        if (idx < 0 || idx >= context.VisibleData.Count) return;
+        if (context.VisibleData == null || !context.VisibleData.Any())
+            return;
+
+        int idx = GetNearestIndex(context.PointerX, priceArea, context.VisibleData.Count, context);
+        if (idx < 0 || idx >= context.VisibleData.Count)
+            return;
 
         var candle = context.VisibleData[idx];
         string timeTxt = candle.Timestamp.ToString("HH:mm");
@@ -70,8 +79,7 @@ public class CrosshairLayer : IChartLayer
         canvas.FillColor = Colors.Gray.WithAlpha(0.6f);
         canvas.FillRoundedRectangle(timeRectLeft, timeRectTop, timeRectWidth, timeRectHeight, 4);
 
-        canvas.DrawString(timeTxt, timeRectLeft, timeRectTop, timeRectWidth, timeRectHeight, HorizontalAlignment.Center, VerticalAlignment.Center
-        );
+        canvas.DrawString(timeTxt, timeRectLeft, timeRectTop, timeRectWidth, timeRectHeight, HorizontalAlignment.Center, VerticalAlignment.Center);
     }
     #endregion
 
@@ -79,6 +87,8 @@ public class CrosshairLayer : IChartLayer
     private static double TranslateYToPrice(float y, RectF area, double min, double max)
     {
         double rg = max - min;
+        if (rg <= 0) return min;
+
         double pct = (area.Bottom - y) / area.Height;
         return min + rg * pct;
     }
@@ -88,11 +98,12 @@ public class CrosshairLayer : IChartLayer
         float cw = ctx.BaseCandleWidth * ctx.ZoomLevel;
         float cs = ctx.BaseCandleSpacing * ctx.ZoomLevel;
         float step = cw + cs;
+
         float xPos = area.Right - count * step;
         float rel = pointerX - xPos;
+
         int idx = (int)Math.Floor(rel / step);
-        idx = Math.Clamp(idx, 0, count - 1);
-        return idx;
+        return Math.Clamp(idx, 0, count - 1);
     }
 
     private static void DrawStringLeft(ICanvas canvas, string text, float x, float y, float w, float h)

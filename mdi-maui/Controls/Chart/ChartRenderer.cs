@@ -20,6 +20,7 @@ public class ChartRenderer : IDrawable
     private Color _backgroundColor = Colors.Black;
     private ChartType _chartType = ChartType.Candle;
     private float _zoomLevel = 1f;
+    private bool _showVolume;
     #endregion
 
     #region Constructor
@@ -34,20 +35,25 @@ public class ChartRenderer : IDrawable
             BaseCandleSpacing = _baseCandleSpacing,
             ZoomLevel = _zoomLevel,
             BackgroundColor = _backgroundColor,
-            ChartType = _chartType
+            ChartType = _chartType,
+            ShowVolume = false
         };
 
         _layers = new List<IChartLayer>
         {
             new BaseBackgroundLayer(),
             new PriceLayer(),
+            new VolumeLayer(),
             new AxisLabelsLayer(_context),
-            new CrosshairLayer()
+            new CrosshairLayer(),
+            new TooltipLayer()
         };
     }
     #endregion
 
     #region Public Methods
+    public ChartRenderContext GetContext() => _context;
+
     public void UpdateChartData(ObservableCollection<ChartData>? chartData, Color backgroundColor, int interval, DateTime lastCloseTime, ChartType chartType)
     {
         _chartData = chartData;
@@ -57,6 +63,12 @@ public class ChartRenderer : IDrawable
         _context.DataSeries = _chartData;
         _context.BackgroundColor = _backgroundColor;
         _context.ChartType = _chartType;
+    }
+
+    public void UpdateShowVolume(bool showVolume)
+    {
+        _showVolume = showVolume;
+        _context.ShowVolume = showVolume;
     }
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
@@ -71,10 +83,25 @@ public class ChartRenderer : IDrawable
         canvas.FillColor = _context.BackgroundColor;
         canvas.FillRectangle(dirtyRect);
 
-        if (_context.DataSeries == null || !_context.DataSeries.Any())
-            return;
+        if (_context.DataSeries == null || !_context.DataSeries.Any()) return;
 
         var chartArea = new RectF(dirtyRect.Left, dirtyRect.Top, dirtyRect.Width - 60, dirtyRect.Height - 24);
+
+        if (_context.ShowVolume)
+        {
+            float margin = chartArea.Height * 0.05f;
+            float volumeHeight = chartArea.Height * 0.20f;
+            float priceHeight = chartArea.Height - volumeHeight - margin;
+
+            _context.PriceArea = new RectF(chartArea.Left, chartArea.Top, chartArea.Width, priceHeight);
+
+            _context.VolumeArea = new RectF(chartArea.Left, chartArea.Top + priceHeight + margin, chartArea.Width, volumeHeight);
+        }
+        else
+        {
+            _context.PriceArea = chartArea;
+            _context.VolumeArea = RectF.Zero;
+        }
 
         foreach (var layer in _layers)
         {

@@ -18,11 +18,10 @@ public partial class ChartViewModel : BindableObject, IDisposable
     #endregion
 
     #region Properties
-
     public ObservableCollection<ChartData> CandlestickSeries { get; }
 
-    private string _chartType;
-    public string ChartType
+    private string? _chartType;
+    public string? ChartType
     {
         get => _chartType;
         set
@@ -32,7 +31,6 @@ public partial class ChartViewModel : BindableObject, IDisposable
             OnPropertyChanged();
         }
     }
-
     #endregion
 
     #region Commands
@@ -55,7 +53,6 @@ public partial class ChartViewModel : BindableObject, IDisposable
         ChangeIntervalCommand = new Command<string>(ChangeInterval);
         ToggleChartTypeCommand = new Command(ToggleChartType);
 
-        // Define o icone inicial como candle, conforme modo claro/escuro
         ChartType = IsDarkMode() ? "dark_candle.png" : "light_candle.png";
 
         GenerateInitialCandlesticks();
@@ -77,7 +74,7 @@ public partial class ChartViewModel : BindableObject, IDisposable
 
     #region Private Methods
 
-    private bool IsDarkMode()
+    private static bool IsDarkMode()
     {
         if (Application.Current?.RequestedTheme == AppTheme.Dark) return true;
         return false;
@@ -85,7 +82,6 @@ public partial class ChartViewModel : BindableObject, IDisposable
 
     private void ToggleChartType()
     {
-        // Se estiver usando candle => muda pra line; se estiver em line => volta pra candle
         if (ChartType.Contains("candle", StringComparison.OrdinalIgnoreCase))
         {
             ChartType = IsDarkMode() ? "dark_line.png" : "light_line.png";
@@ -175,6 +171,7 @@ public partial class ChartViewModel : BindableObject, IDisposable
         double high = open + _randomGenerator.NextDouble() * 10;
         double low = open - _randomGenerator.NextDouble() * 10;
         double close = low + _randomGenerator.NextDouble() * (high - low);
+        double volume = _randomGenerator.NextDouble() * 1000;
 
         return new ChartData
         {
@@ -182,9 +179,9 @@ public partial class ChartViewModel : BindableObject, IDisposable
             High = high,
             Low = low,
             Close = close,
+            Volume = volume,
             Timestamp = _lastCandleTime.AddSeconds(_intervalInSeconds)
         };
     }
-
     #endregion
 }

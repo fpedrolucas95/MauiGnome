@@ -8,19 +8,39 @@ public class PriceLayer : IChartLayer
     #region Public Methods
     public void DrawLayer(ICanvas canvas, RectF dirtyRect, RectF chartArea, ChartRenderContext context)
     {
+        var finalArea = context.ShowVolume ? context.PriceArea : chartArea;
+
         if (context.DataSeries == null || !context.DataSeries.Any()) return;
 
-        var visibleData = GetVisibleData(context.DataSeries, context, chartArea.Width);
-        CalculateAutoScale(visibleData, out double minPrice, out double maxPrice);
+        var visibleData = GetVisibleData(context.DataSeries, context, finalArea.Width);
+        CalculateAutoScale(visibleData, context.ChartType, out double minPrice, out double maxPrice);
         context.MinPrice = minPrice;
         context.MaxPrice = maxPrice;
         context.VisibleData = visibleData;
 
-        if (context.ChartType == ChartType.Candle) DrawCandles(canvas, chartArea, visibleData, context);
-        else if (context.ChartType == ChartType.Line) DrawLine(canvas, chartArea, visibleData, context);
-        else DrawArea(canvas, chartArea, visibleData, context);
+        float cw = context.BaseCandleWidth * context.ZoomLevel;
+        float cs = context.BaseCandleSpacing * context.ZoomLevel;
+        float step = cw + cs;
+        float firstCandleX = finalArea.Right - visibleData.Count * step;
 
-        if (visibleData.Count != 0) DrawCurrentPriceLine(canvas, chartArea, visibleData, context);
+        context.CandleWidthPx = cw;
+        context.CandleSpacingPx = cs;
+        context.FirstCandleX = firstCandleX;
+        context.VisibleCount = visibleData.Count;
+
+        if (!visibleData.Any()) return;
+
+        if (context.ChartType == ChartType.Candle)
+            DrawCandles(canvas, finalArea, visibleData, firstCandleX, step, cw, context);
+        else if (context.ChartType == ChartType.Line)
+            DrawLine(canvas, finalArea, visibleData, firstCandleX, step, cw, context);
+        else if (context.ChartType == ChartType.Volume)
+            DrawVolume(canvas, finalArea, visibleData, firstCandleX, step, cw, context);
+        else
+            DrawArea(canvas, finalArea, visibleData, firstCandleX, step, cw, context);
+
+        if (context.ChartType != ChartType.Volume)
+            DrawCurrentPriceLine(canvas, finalArea, visibleData, context);
     }
     #endregion
 
@@ -33,7 +53,7 @@ public class PriceLayer : IChartLayer
         return data.Skip(Math.Max(0, data.Count - maxVisible)).ToList();
     }
 
-    private static void CalculateAutoScale(List<ChartData> visible, out double minPrice, out double maxPrice)
+    private static void CalculateAutoScale(List<ChartData> visible, ChartType chartType, out double minPrice, out double maxPrice)
     {
         if (!visible.Any())
         {
@@ -41,22 +61,31 @@ public class PriceLayer : IChartLayer
             maxPrice = 1;
             return;
         }
-        double vMax = visible.Max(c => c.High);
-        double vMin = visible.Min(c => c.Low);
-        double range = vMax - vMin;
-        double pad = range * 0.05;
-        maxPrice = vMax + pad;
-        minPrice = vMin - pad;
+
+        if (chartType == ChartType.Volume)
+        {
+            maxPrice = visible.Max(c => c.Volume);
+            minPrice = 0;
+            double padding = maxPrice * 0.05;
+            maxPrice += padding;
+        }
+        else
+        {
+            double vMax = visible.Max(c => c.High);
+            double vMin = visible.Min(c => c.Low);
+            double range = vMax - vMin;
+            double pad = range * 0.05;
+            maxPrice = vMax + pad;
+            minPrice = vMin - pad;
+        }
     }
 
-    private static void DrawCandles(ICanvas canvas, RectF area, List<ChartData> visible, ChartRenderContext ctx)
+    private static void DrawCandles(ICanvas canvas, RectF area, List<ChartData> data, float firstCandleX, float step, float candleW, ChartRenderContext ctx)
     {
-        float cw = ctx.BaseCandleWidth * ctx.ZoomLevel;
-        float cs = ctx.BaseCandleSpacing * ctx.ZoomLevel;
-        float xPos = area.Right - visible.Count * (cw + cs);
-
-        foreach (var d in visible)
+        for (int i = 0; i < data.Count; i++)
         {
+            var d = data[i];
+            float xPos = firstCandleX + i * step;
             float oY = TranslatePriceToY(d.Open, area, ctx.MinPrice, ctx.MaxPrice);
             float cY = TranslatePriceToY(d.Close, area, ctx.MinPrice, ctx.MaxPrice);
             float hY = TranslatePriceToY(d.High, area, ctx.MinPrice, ctx.MaxPrice);
@@ -69,27 +98,23 @@ public class PriceLayer : IChartLayer
 
             float bodyTop = Math.Min(oY, cY);
             float bodyH = Math.Abs(oY - cY);
-            canvas.FillRoundedRectangle(xPos, bodyTop, cw, bodyH, 2);
+            canvas.FillRoundedRectangle(xPos, bodyTop, candleW, bodyH, 2);
 
-            float wickX = xPos + cw / 2;
+            float wickX = xPos + candleW / 2;
             canvas.DrawLine(wickX, hY, wickX, lY);
-
-            xPos += cw + cs;
         }
     }
 
-    private static void DrawLine(ICanvas canvas, RectF area, List<ChartData> visible, ChartRenderContext ctx)
+    private static void DrawLine(ICanvas canvas, RectF area, List<ChartData> data, float firstCandleX, float step, float candleW, ChartRenderContext ctx)
     {
-        float cw = ctx.BaseCandleWidth * ctx.ZoomLevel;
-        float cs = ctx.BaseCandleSpacing * ctx.ZoomLevel;
-        float xPos = area.Right - visible.Count * (cw + cs);
-
         var path = new PathF();
         bool first = true;
-
-        foreach (var d in visible)
+        for (int i = 0; i < data.Count; i++)
         {
+            var d = data[i];
+            float xPos = firstCandleX + i * step;
             float yVal = TranslatePriceToY(d.Close, area, ctx.MinPrice, ctx.MaxPrice);
+
             if (first)
             {
                 path.MoveTo(xPos, yVal);
@@ -99,27 +124,24 @@ public class PriceLayer : IChartLayer
             {
                 path.LineTo(xPos, yVal);
             }
-            xPos += cw + cs;
         }
         canvas.StrokeColor = Colors.Green;
         canvas.StrokeSize = 2;
         canvas.DrawPath(path);
     }
 
-    private static void DrawArea(ICanvas canvas, RectF area, List<ChartData> visible, ChartRenderContext ctx)
+    private static void DrawArea(ICanvas canvas, RectF area, List<ChartData> data, float firstCandleX, float step, float candleW, ChartRenderContext ctx)
     {
-        float cw = ctx.BaseCandleWidth * ctx.ZoomLevel;
-        float cs = ctx.BaseCandleSpacing * ctx.ZoomLevel;
-        float xPos = area.Right - visible.Count * (cw + cs);
-
         var path = new PathF();
         bool first = true;
         float startX = 0;
         float firstY = 0;
-
-        foreach (var d in visible)
+        for (int i = 0; i < data.Count; i++)
         {
+            var d = data[i];
+            float xPos = firstCandleX + i * step;
             float yVal = TranslatePriceToY(d.Close, area, ctx.MinPrice, ctx.MaxPrice);
+
             if (first)
             {
                 path.MoveTo(xPos, yVal);
@@ -131,27 +153,40 @@ public class PriceLayer : IChartLayer
             {
                 path.LineTo(xPos, yVal);
             }
-            xPos += cw + cs;
         }
 
-        path.LineTo(xPos - cw - cs, area.Bottom);
+        float lastX = firstCandleX + (data.Count - 1) * step;
+        path.LineTo(lastX, area.Bottom);
         path.LineTo(startX, area.Bottom);
-        canvas.StrokeColor = Color.FromArgb("#1ABC9C");
         path.LineTo(startX, firstY);
+
+        canvas.StrokeColor = Color.FromArgb("#1ABC9C");
         canvas.FillColor = Color.FromArgb("#1ABC9C").WithAlpha(0.3f);
         canvas.StrokeSize = 2;
         canvas.DrawPath(path);
     }
 
-    private static float TranslatePriceToY(double price, RectF area, double min, double max)
+    private static void DrawVolume(ICanvas canvas, RectF area, List<ChartData> data, float firstCandleX, float step, float candleW, ChartRenderContext ctx)
     {
-        double rg = max - min;
-        if (rg <= 0) return area.Bottom;
-        return (float)(area.Bottom - ((price - min) / rg) * area.Height);
+        for (int i = 0; i < data.Count; i++)
+        {
+            var d = data[i];
+            float xPos = firstCandleX + i * step;
+            float topY = TranslatePriceToY(d.Volume, area, ctx.MinPrice, ctx.MaxPrice);
+            float barHeight = area.Bottom - topY;
+
+            bool bull = d.Close >= d.Open;
+            var color = bull ? Color.FromArgb("#2ECC71") : Color.FromArgb("#EC7063");
+
+            canvas.FillColor = color.WithAlpha(0.7f);
+            canvas.FillRectangle(xPos, topY, candleW, barHeight);
+        }
     }
 
     private static void DrawCurrentPriceLine(ICanvas canvas, RectF area, List<ChartData> visible, ChartRenderContext ctx)
     {
+        if (ctx.ChartType == ChartType.Volume) return;
+
         var lastCandle = visible[^1];
         float y = TranslatePriceToY(lastCandle.Close, area, ctx.MinPrice, ctx.MaxPrice);
 
@@ -171,7 +206,7 @@ public class PriceLayer : IChartLayer
         }
 
         canvas.SaveState();
-        canvas.StrokeDashPattern = [3, 3];
+        canvas.StrokeDashPattern = new float[] { 3, 3 };
         canvas.StrokeColor = color;
         canvas.StrokeSize = 1;
         canvas.DrawLine(area.Left, y, area.Right, y);
@@ -200,6 +235,13 @@ public class PriceLayer : IChartLayer
         float textX = boxLeft + 10;
         float textY = boxTop;
         canvas.DrawString(priceStr, textX, textY, textWidth, textHeight, HorizontalAlignment.Left, VerticalAlignment.Center);
+    }
+
+    private static float TranslatePriceToY(double price, RectF area, double min, double max)
+    {
+        double rg = max - min;
+        if (rg <= 0) return area.Bottom;
+        return (float)(area.Bottom - ((price - min) / rg) * area.Height);
     }
     #endregion
 }

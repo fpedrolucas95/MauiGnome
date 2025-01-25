@@ -67,6 +67,17 @@ public partial class ChartView : ContentView
         CandleChart.ZoomOut();
     }
 
+    private void OnVolumeEnabledClicked(object sender, EventArgs e)
+    {
+        CandleChart.ShowVolume = !CandleChart.ShowVolume;
+
+        if (CandleChart.ShowVolume)
+            VolumeEnableButton.BackgroundColor = Color.FromArgb("#2196F3");
+        else
+            VolumeEnableButton.ClearValue(Button.BackgroundColorProperty);
+    }
+
+
     private void OnToggleChartTypeClicked(object sender, EventArgs e)
     {
         if (CandleChart.ChartType == ChartType.Candle)

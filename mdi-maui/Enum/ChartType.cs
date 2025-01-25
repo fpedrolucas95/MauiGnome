@@ -2,5 +2,5 @@
 
 public enum ChartType
 {
-    Candle, Line
+    Candle, Line, Volume
 }
